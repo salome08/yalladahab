@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Advertise in Dahab · Yalla Dahab</title>
+  <meta name="description" content="Banners and featured events for bars, dive centres and event organisers in Dahab.">
+  <meta property="og:title" content="Advertise in Dahab · Yalla Dahab">
+  <meta property="og:description" content="Banners and featured events for bars, dive centres and event organisers in Dahab.">
+  <meta property="og:type" content="website">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='46' fill='%230e7c86'/><path d='M50 4a46 46 0 0 1 0 92z' fill='%23ff7a59'/></svg>">
+  <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body data-page="advertise">
+<header id="site-header"></header>
+<main>
+
+<div class="container">
+  <div class="page-head"><h1 data-i18n="ads.title"></h1><p class="muted" data-i18n="ads.subtitle"></p></div>
+  <p class="notice" data-i18n="ads.launchOffer"></p>
+  <div class="offers">
+    <div class="offer"><h3 data-i18n="ads.homeBanner"></h3><p class="muted" data-i18n="ads.homeBannerFor"></p>
+      <p><span class="amount" data-price="home"></span> / <span data-i18n="ads.week"></span></p>
+      <a class="btn" href="?offer=home#ad-form" data-i18n="ads.formTitle"></a></div>
+    <div class="offer"><h3 data-i18n="ads.searchBanner"></h3><p class="muted" data-i18n="ads.searchBannerFor"></p>
+      <p><span class="amount" data-price="search"></span> / <span data-i18n="ads.week"></span></p>
+      <a class="btn" href="?offer=search#ad-form" data-i18n="ads.formTitle"></a></div>
+    <div class="offer"><h3 data-i18n="ads.featuredEvent"></h3><p class="muted" data-i18n="ads.featuredEventFor"></p>
+      <p><span class="amount" data-price="event"></span> / <span data-i18n="ads.event"></span></p>
+      <a class="btn" href="?offer=event#ad-form" data-i18n="ads.formTitle"></a></div>
+  </div>
+  <p class="muted" data-i18n="ads.rules"></p>
+  <div class="form-layout">
+    <form class="form-card" id="ad-form">
+      <h2 class="full" data-i18n="ads.formTitle"></h2>
+      <label class="full"><span data-i18n="ads.business"></span><input name="business" required></label>
+      <label class="full"><span data-i18n="ads.offer"></span><select name="offer"></select></label>
+      <label><span data-i18n="ads.startDate"></span><input name="start" type="date" required></label>
+      <label><span data-i18n="ads.weeks"></span><input name="weeks" type="number" min="1" value="1" required></label>
+      <label class="full"><span data-i18n="ads.message"></span><textarea name="message" required></textarea></label>
+      <p class="full total"><span data-i18n="ads.total"></span> : <strong id="ad-total"></strong></p>
+      <button class="btn btn-whatsapp full" type="submit" data-i18n="ads.submit"></button>
+    </form>
+    <aside class="side-card"><p data-i18n="ads.payInfo"></p></aside>
+  </div>
+</div>
+</main>
+<footer id="site-footer"></footer>
+<script src="assets/js/config.js"></script>
+<script src="assets/js/i18n.js"></script>
+<script src="assets/data/listings.js"></script>
+<script src="assets/data/events.js"></script>
+<script src="assets/data/ads.js"></script>
+<script src="assets/js/app.js"></script>
+</body>
+</html>
