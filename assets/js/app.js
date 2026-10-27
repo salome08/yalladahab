@@ -53,7 +53,11 @@
       return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
     });
   }
-  function money(n) { return Number(n).toLocaleString(lang === "fr" ? "fr-FR" : "en-US") + " EGP"; }
+  function money(n, currency) {
+    var amount = Number(n).toLocaleString(lang === "fr" ? "fr-FR" : "en-US");
+    return currency === "USD" ? (lang === "fr" ? amount + " $" : "$" + amount) : amount + " EGP";
+  }
+  function inEgp(n, currency) { return n && currency === "USD" ? n * CONFIG.usdToEgp : n; }
   function waLink(number, text) { return "https://wa.me/" + number + "?text=" + encodeURIComponent(text); }
   function photo(hue, label, src) {
     return '<div class="photo" style="--h:' + hue + '">' +
@@ -63,8 +67,8 @@
   function photoOf(l, i) { return l.photos && l.photos[i]; }
   function priceHtml(l) {
     if (!l.pricePerNight) return "<strong>" + esc(t("card.onRequest")) + "</strong>";
-    return "<strong>" + money(l.pricePerNight) + "</strong> / " + esc(t("card.night")) +
-      (l.pricePerMonth ? ' <span class="muted">· ' + money(l.pricePerMonth) + " / " + esc(t("card.month")) + "</span>" : "");
+    return "<strong>" + money(l.pricePerNight, l.currency) + "</strong> / " + esc(t("card.night")) +
+      (l.pricePerMonth ? ' <span class="muted">· ' + money(l.pricePerMonth, l.currency) + " / " + esc(t("card.month")) + "</span>" : "");
   }
   function formatDate(iso, opts) {
     var d = new Date(iso + "T12:00:00");
@@ -216,7 +220,7 @@
       var workspace = form.elements.workspace.checked;
       var verified = form.elements.verified.checked;
       var results = LISTINGS.filter(function (l) {
-        var price = monthly ? l.pricePerMonth : l.pricePerNight;
+        var price = inEgp(monthly ? l.pricePerMonth : l.pricePerNight, l.currency);
         var onRequest = !l.pricePerNight;
         if (area && l.area !== area) return false;
         if (type && l.type !== type) return false;
@@ -226,7 +230,7 @@
         if (verified && !l.verified) return false;
         return true;
       });
-      function sortPrice(l) { return (monthly ? l.pricePerMonth : l.pricePerNight) || Infinity; }
+      function sortPrice(l) { return inEgp(monthly ? l.pricePerMonth : l.pricePerNight, l.currency) || Infinity; }
       results.sort(function (a, b) { return sortPrice(a) - sortPrice(b); });
       document.getElementById("results-count").textContent = t("listings.count", { n: results.length });
       document.getElementById("results").innerHTML = results.length
