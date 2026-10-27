@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Yalla Dahab · Stays and local life in Dahab</title>
+  <meta name="description" content="Homes listed by Dahab locals, contact hosts on WhatsApp, no booking fees. Plus what's on in Dahab this week.">
+  <meta property="og:title" content="Yalla Dahab · Stays and local life in Dahab">
+  <meta property="og:description" content="Homes listed by Dahab locals, contact hosts on WhatsApp, no booking fees. Plus what's on in Dahab this week.">
+  <meta property="og:type" content="website">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='46' fill='%230e7c86'/><path d='M50 4a46 46 0 0 1 0 92z' fill='%23ff7a59'/></svg>">
+  <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body data-page="home">
+<header id="site-header"></header>
+<main>
+
+<section class="hero">
+  <div class="container">
+    <h1 data-i18n="hero.title"></h1>
+    <p data-i18n="hero.subtitle"></p>
+    <form class="search-box" id="hero-search" action="listings.html">
+      <label><span data-i18n="search.area"></span><select name="area"></select></label>
+      <label><span data-i18n="search.type"></span><select name="type"></select></label>
+      <label><span data-i18n="search.stay"></span>
+        <select name="stay"><option value="" data-i18n="search.nightly"></option><option value="monthly" data-i18n="search.monthly"></option></select>
+      </label>
+      <label><span data-i18n="search.maxPrice"></span><input name="max" type="number" min="0" step="100" inputmode="numeric"></label>
+      <button class="btn btn-coral" type="submit" data-i18n="search.submit"></button>
+    </form>
+  </div>
+</section>
+
+<div class="container">
+  <div class="banners" data-banner-slot="home"></div>
+
+  <section class="section">
+    <div class="section-head"><h2 data-i18n="home.featured"></h2><a href="listings.html" data-i18n="home.seeAll"></a></div>
+    <div class="grid" id="featured-listings"></div>
+  </section>
+
+  <section class="why">
+    <div><span class="icon">💸</span><h3 data-i18n="home.why1.title"></h3><p data-i18n="home.why1.text"></p></div>
+    <div><span class="icon">✅</span><h3 data-i18n="home.why2.title"></h3><p data-i18n="home.why2.text"></p></div>
+    <div><span class="icon">💻</span><h3 data-i18n="home.why3.title"></h3><p data-i18n="home.why3.text"></p></div>
+  </section>
+
+  <section class="section">
+    <div class="section-head"><h2 data-i18n="home.events"></h2><a href="events.html" data-i18n="home.seeAgenda"></a></div>
+    <div class="events-grid home-events" id="home-events"></div>
+  </section>
+
+  <section class="host-cta">
+    <div><h2 data-i18n="home.hostCta.title"></h2><p data-i18n="home.hostCta.text"></p></div>
+    <a class="btn btn-coral" href="host.html" data-i18n="home.hostCta.button"></a>
+  </section>
+</div>
+</main>
+<footer id="site-footer"></footer>
+<script src="assets/js/config.js"></script>
+<script src="assets/js/i18n.js"></script>
+<script src="assets/data/listings.js"></script>
+<script src="assets/data/events.js"></script>
+<script src="assets/data/ads.js"></script>
+<script src="assets/js/app.js"></script>
+</body>
+</html>

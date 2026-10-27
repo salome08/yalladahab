@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>List your place for free · Yalla Dahab</title>
+  <meta name="description" content="Hosts in Dahab: list your place for free and get requests on WhatsApp.">
+  <meta property="og:title" content="List your place for free · Yalla Dahab">
+  <meta property="og:description" content="Hosts in Dahab: list your place for free and get requests on WhatsApp.">
+  <meta property="og:type" content="website">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='46' fill='%230e7c86'/><path d='M50 4a46 46 0 0 1 0 92z' fill='%23ff7a59'/></svg>">
+  <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body data-page="host">
+<header id="site-header"></header>
+<main>
+
+<div class="container">
+  <div class="page-head"><h1 data-i18n="host.title"></h1><p class="muted" data-i18n="host.subtitle"></p></div>
+  <div class="form-layout">
+    <form class="form-card" id="host-form">
+      <label><span data-i18n="host.name"></span><input name="name" required autocomplete="name"></label>
+      <label><span data-i18n="host.whatsapp"></span><input name="whatsapp" type="tel" required placeholder="+20 10 1234 5678" autocomplete="tel"></label>
+      <label class="full"><span data-i18n="host.titleField"></span><input name="title" required data-i18n-placeholder="host.titlePlaceholder"></label>
+      <label><span data-i18n="search.area"></span><select name="area"></select></label>
+      <label><span data-i18n="search.type"></span><select name="type"></select></label>
+      <label><span data-i18n="host.guests"></span><input name="guests" type="number" min="1" value="2" required></label>
+      <label><span data-i18n="host.bedrooms"></span><input name="bedrooms" type="number" min="0" value="1" required></label>
+      <label><span data-i18n="host.priceNight"></span><input name="priceNight" type="number" min="0" step="50" required></label>
+      <label><span data-i18n="host.priceMonth"></span><input name="priceMonth" type="number" min="0" step="500"></label>
+      <label><span data-i18n="host.wifi"></span><input name="wifi" type="number" min="0"></label>
+      <div class="full"><label data-i18n="host.amenities"></label><div class="checks" id="amenity-choices"></div></div>
+      <label class="full"><span data-i18n="host.description"></span><textarea name="description" required></textarea></label>
+      <p class="full small muted" data-i18n="host.photos"></p>
+      <button class="btn btn-whatsapp full" type="submit" data-i18n="host.submit"></button>
+    </form>
+    <aside>
+      <div class="side-card">
+        <ol class="steps">
+          <li data-i18n="host.step1"></li>
+          <li data-i18n="host.step2"></li>
+          <li data-i18n="host.step3"></li>
+        </ol>
+      </div>
+      <div class="side-card">
+        <h3 data-i18n="host.network.title"></h3>
+        <p data-i18n="host.network.text"></p>
+      </div>
+    </aside>
+  </div>
+</div>
+</main>
+<footer id="site-footer"></footer>
+<script src="assets/js/config.js"></script>
+<script src="assets/js/i18n.js"></script>
+<script src="assets/data/listings.js"></script>
+<script src="assets/data/events.js"></script>
+<script src="assets/data/ads.js"></script>
+<script src="assets/js/app.js"></script>
+</body>
+</html>
