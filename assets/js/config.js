@@ -2,7 +2,7 @@
 // (format international, sans + ni espaces, ex : 201012345678).
 window.YD_CONFIG = {
   siteName: "Yalla Dahab",
-  adminWhatsapp: "201000000000",
+  adminWhatsapp: "33659213813",
   adminEmail: "hello@yalladahab.com",
   instapayHandle: "yalladahab@instapay",
   maxBannersPerPage: 2

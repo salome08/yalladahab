@@ -10,7 +10,7 @@
   var AREAS = ["lighthouse", "mashraba", "masbat", "assala", "eel-garden", "lagoon", "blue-hole-road"];
   var TYPES = ["studio", "apartment", "villa", "room"];
   var AMENITIES = ["wifi", "workspace", "seaView", "ac", "kitchen", "terrace", "garden", "washer",
-    "rooftop", "pool", "parking", "gearStorage", "backupPower"];
+    "rooftop", "pool", "parking", "gearStorage", "backupPower", "beachAccess", "hammock", "pets", "selfCheckin"];
   var AD_PRICES = { home: 1500, search: 800, event: 300 };
 
   // ---------- Langue ----------
@@ -55,8 +55,16 @@
   }
   function money(n) { return Number(n).toLocaleString(lang === "fr" ? "fr-FR" : "en-US") + " EGP"; }
   function waLink(number, text) { return "https://wa.me/" + number + "?text=" + encodeURIComponent(text); }
-  function photo(hue, label) {
-    return '<div class="photo" style="--h:' + hue + '"><span>' + esc(label || "") + "</span></div>";
+  function photo(hue, label, src) {
+    return '<div class="photo" style="--h:' + hue + '">' +
+      (src ? '<img src="' + esc(src) + '" alt="" loading="lazy" onerror="this.remove()">' : "") +
+      "<span>" + esc(label || "") + "</span></div>";
+  }
+  function photoOf(l, i) { return l.photos && l.photos[i]; }
+  function priceHtml(l) {
+    if (!l.pricePerNight) return "<strong>" + esc(t("card.onRequest")) + "</strong>";
+    return "<strong>" + money(l.pricePerNight) + "</strong> / " + esc(t("card.night")) +
+      (l.pricePerMonth ? ' <span class="muted">· ' + money(l.pricePerMonth) + " / " + esc(t("card.month")) + "</span>" : "");
   }
   function formatDate(iso, opts) {
     var d = new Date(iso + "T12:00:00");
@@ -141,14 +149,13 @@
 
   function listingCard(l) {
     return '<a class="card listing-card" href="listing.html?id=' + encodeURIComponent(l.id) + '">' +
-      photo(l.hue, t("type." + l.type)) +
+      photo(l.hue, t("type." + l.type), photoOf(l, 0)) +
       (l.verified ? '<span class="badge badge-verified">✓ ' + esc(t("card.verified")) + "</span>" : "") +
       '<div class="card-body">' +
         '<p class="card-meta">' + esc(t("area." + l.area)) + " · " + l.guests + " " + esc(t("card.guests")) +
           (l.wifiMbps ? " · " + l.wifiMbps + " " + esc(t("card.mbps")) : "") + "</p>" +
         "<h3>" + esc(loc(l.title)) + "</h3>" +
-        '<p class="price"><strong>' + money(l.pricePerNight) + "</strong> / " + esc(t("card.night")) +
-          (l.pricePerMonth ? ' <span class="muted">· ' + money(l.pricePerMonth) + " / " + esc(t("card.month")) + "</span>" : "") + "</p>" +
+        '<p class="price">' + priceHtml(l) + "</p>" +
       "</div></a>";
   }
 
@@ -210,15 +217,17 @@
       var verified = form.elements.verified.checked;
       var results = LISTINGS.filter(function (l) {
         var price = monthly ? l.pricePerMonth : l.pricePerNight;
+        var onRequest = !l.pricePerNight;
         if (area && l.area !== area) return false;
         if (type && l.type !== type) return false;
-        if (monthly && !l.pricePerMonth) return false;
-        if (max && price > max) return false;
+        if (monthly && !l.pricePerMonth && !onRequest) return false;
+        if (max && !onRequest && price > max) return false;
         if (workspace && !(l.amenities.indexOf("workspace") !== -1 || l.wifiMbps >= 50)) return false;
         if (verified && !l.verified) return false;
         return true;
       });
-      results.sort(function (a, b) { return monthly ? a.pricePerMonth - b.pricePerMonth : a.pricePerNight - b.pricePerNight; });
+      function sortPrice(l) { return (monthly ? l.pricePerMonth : l.pricePerNight) || Infinity; }
+      results.sort(function (a, b) { return sortPrice(a) - sortPrice(b); });
       document.getElementById("results-count").textContent = t("listings.count", { n: results.length });
       document.getElementById("results").innerHTML = results.length
         ? results.map(listingCard).join("")
@@ -254,7 +263,10 @@
 
     root.innerHTML =
       '<a class="back" href="listings.html">← ' + esc(t("listing.back")) + "</a>" +
-      '<div class="gallery">' + photo(l.hue, t("type." + l.type)) + photo(l.hue + 25, "") + photo(l.hue - 25, "") + "</div>" +
+      '<div class="gallery">' + photo(l.hue, t("type." + l.type), photoOf(l, 0)) + photo(l.hue + 25, "", photoOf(l, 1)) + photo(l.hue - 25, "", photoOf(l, 2)) + "</div>" +
+      (l.photos && l.photos.length > 3 ? '<div class="more-photos">' + l.photos.slice(3).map(function (src) {
+        return '<img src="' + esc(src) + '" alt="" loading="lazy" onerror="this.remove()">';
+      }).join("") + "</div>" : "") +
       '<div class="listing-layout">' +
         "<div>" +
           '<p class="card-meta">' + esc(t("area." + l.area)) + " · " + esc(t("type." + l.type)) + " · " + l.guests + " " + esc(t("card.guests")) + "</p>" +
@@ -267,8 +279,7 @@
           '<p><a href="https://maps.google.com/?q=' + encodeURIComponent(t("area." + l.area) + ", Dahab, Egypt") + '" target="_blank" rel="noopener">📍 ' + esc(t("listing.map")) + "</a></p>" +
         "</div>" +
         '<aside class="contact-box">' +
-          '<p class="price"><strong>' + money(l.pricePerNight) + "</strong> / " + esc(t("card.night")) + "</p>" +
-          (l.pricePerMonth ? '<p class="price muted">' + money(l.pricePerMonth) + " / " + esc(t("card.month")) + "</p>" : "") +
+          '<p class="price">' + priceHtml(l) + "</p>" +
           '<div class="date-row">' +
             "<label>" + esc(t("listing.from")) + '<input type="date" id="date-from"></label>' +
             "<label>" + esc(t("listing.to")) + '<input type="date" id="date-to"></label>' +
