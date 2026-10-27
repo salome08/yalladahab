@@ -12,12 +12,26 @@ Site de logements et d'agenda local à Dahab : les hôtes publient gratuitement,
 | Agenda des événements | `events.html` |
 | Formulaire pour les hôtes (envoyé sur WhatsApp à l'administratrice) | `host.html` |
 | Offres publicitaires et demande de réservation de bannière | `advertise.html` |
+| Connexion des hôtes par lien email | `login.html` |
+| Mon espace : coordonnées, mes annonces (ajout, modification, photos, pause) | `account.html` |
+| Espace admin : validation des annonces, badge vérifié, agenda, bannières | `admin.html` |
 
 Le site est en anglais et en français (sélecteur en haut à droite).
 
-## Modifier le contenu
+## Base de données et espace hôtes
 
-Tout le contenu se trouve dans trois fichiers simples :
+L'espace hôtes et l'espace admin fonctionnent avec [Supabase](https://supabase.com) (gratuit). Pour l'activer, suivre [supabase/GUIDE.md](supabase/GUIDE.md).
+
+- Un hôte crée son compte avec son email, puis publie et modifie ses annonces et ses photos lui-même.
+- Une nouvelle annonce reste invisible jusqu'à sa validation dans l'espace admin. Ensuite, l'hôte peut la modifier ou la mettre en pause librement.
+- Le badge « vérifié », la mise en avant, l'agenda et les bannières sont réservés à l'admin.
+- Une bannière s'arrête toute seule à sa date de fin.
+
+Ces règles sont appliquées par la base elle-même (`supabase/schema.sql`), pas seulement par les pages.
+
+## Modifier le contenu sans base de données
+
+Tant que Supabase n'est pas configuré, tout le contenu se trouve dans trois fichiers simples :
 
 - `assets/data/listings.js` : les logements
 - `assets/data/events.js` : les événements
@@ -36,7 +50,5 @@ Avec GitHub Pages : dans le dépôt GitHub, **Settings → Pages → Branch : ma
 
 ## Prochaines étapes prévues
 
-- Comptes hôtes pour publier et modifier soi-même ses annonces (base de données gratuite type Supabase)
-- Vraies photos des logements
 - Paiement en ligne des bannières (Paymob)
 - Russe et arabe

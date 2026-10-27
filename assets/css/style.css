@@ -237,3 +237,53 @@ a.card:hover { box-shadow: 0 6px 18px rgba(29,42,51,.14); }
 .footer-inner a { color: #fff; }
 .demo-note { grid-column: 1 / -1; font-size: .8rem; opacity: .7; }
 @media (max-width: 600px) { .footer-inner { grid-template-columns: 1fr; } }
+
+/* Espace hôtes et admin */
+.db-only { display: none; }
+body.db-on .db-only { display: block; }
+body.db-on .account-cta.db-only { display: flex; }
+.account-cta { background: var(--card); border: 2px solid var(--sea); border-radius: var(--radius); padding: 20px 24px; margin-bottom: 16px; gap: 20px; align-items: center; justify-content: space-between; flex-wrap: wrap; }
+.account-cta p { margin: 0; }
+.space { padding: 28px 16px 48px; }
+.space-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; flex-wrap: wrap; margin-bottom: 20px; }
+.space-head h1 { margin: 0; }
+.space-head p { margin: 4px 0 0; }
+.space-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.space-section { margin-top: 32px; }
+.form-card.narrow { max-width: 480px; margin: 24px auto; grid-template-columns: 1fr; }
+.form-card h1, .form-card h2 { margin: 0; }
+.form-actions { display: flex; gap: 10px; justify-content: flex-end; flex-wrap: wrap; }
+.message { background: #e1f4ea; color: #146c3c; border-radius: var(--radius); padding: 12px 16px; font-weight: 600; }
+.message-error { background: #ffe6dd; color: #8a2f1b; }
+.space-list { display: grid; gap: 12px; }
+.space-row { display: flex; gap: 14px; background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); padding: 12px; }
+.space-thumb { position: relative; flex-shrink: 0; width: 112px; height: 84px; border-radius: 10px; overflow: hidden; background: linear-gradient(180deg, hsl(var(--h), 70%, 72%) 0 60%, hsl(38, 55%, 78%) 60%); }
+.space-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.space-row-body { flex: 1; min-width: 0; }
+.space-row-body h3 { margin: 0 0 6px; }
+.space-row-actions { display: flex; flex-wrap: wrap; gap: 6px 16px; align-items: center; margin-top: 8px; font-size: .92rem; }
+.space-row-actions select { width: auto; margin: 0; padding: 6px 8px; }
+.link-button.danger { color: #b8432a; }
+.status-pending { background: #fff3cd; color: #7a5a00; }
+.status-published { background: #e1f4ea; color: #146c3c; }
+.status-paused { background: var(--sand-2); color: var(--muted); }
+.status-rejected { background: #ffe6dd; color: #b8432a; }
+.photo-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; margin: 8px 0 12px; }
+.photo-grid:empty { display: none; }
+.photo-item { position: relative; margin: 0; aspect-ratio: 4 / 3; border-radius: 10px; overflow: hidden; background: var(--sand-2); }
+.photo-item img { width: 100%; height: 100%; object-fit: cover; }
+.photo-item .badge { position: absolute; left: 6px; bottom: 6px; }
+.photo-btn { position: absolute; left: 6px; bottom: 6px; border: 0; border-radius: 999px; padding: 3px 9px; font: inherit; font-size: .75rem; font-weight: 600; background: rgba(255,255,255,.9); cursor: pointer; }
+.photo-btn.photo-remove { left: auto; bottom: auto; top: 6px; right: 6px; width: 28px; height: 28px; padding: 0; font-size: 1.1rem; line-height: 1; }
+.file-button { display: inline-block; color: var(--ink); font-size: 1rem; }
+.file-button input { display: none; }
+body.db-on .demo-note { display: none; }
+.tabs .count { display: inline-block; min-width: 20px; border-radius: 999px; background: var(--coral); color: #fff; font-size: .75rem; padding: 1px 6px; }
+.review-card { margin-bottom: 16px; }
+.thumbs { display: flex; gap: 6px; overflow-x: auto; }
+.thumbs img { width: 120px; height: 90px; object-fit: cover; border-radius: 8px; flex-shrink: 0; }
+.crud-list { margin-top: 16px; }
+.crud-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; background: var(--card); border-radius: 10px; padding: 10px 14px; box-shadow: var(--shadow); }
+.crud-row .space-row-actions { margin: 0; }
+#crud-form { margin: 0 0 16px; }
+@media (max-width: 480px) { .space-thumb { width: 84px; height: 64px; } }

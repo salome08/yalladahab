@@ -7,5 +7,9 @@ window.YD_CONFIG = {
   instapayHandle: "yalladahab@instapay",
   maxBannersPerPage: 2,
   // Taux approximatif pour comparer les prix en dollars au budget en EGP des filtres.
-  usdToEgp: 48
+  usdToEgp: 48,
+  // Base de données Supabase (voir supabase/GUIDE.md). Tant que ces deux lignes sont vides,
+  // le site affiche les fichiers de assets/data/ et l'espace hôtes reste désactivé.
+  supabaseUrl: "",
+  supabaseAnonKey: ""
 };

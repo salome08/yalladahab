@@ -3,9 +3,11 @@
 
   var CONFIG = window.YD_CONFIG;
   var I18N = window.YD_I18N;
-  var LISTINGS = window.YD_LISTINGS || [];
-  var EVENTS = window.YD_EVENTS || [];
-  var ADS = window.YD_ADS || [];
+  var DB = window.YD_DB;
+  // Remplis au chargement de la page, depuis la base ou depuis les fichiers.
+  var LISTINGS = [];
+  var EVENTS = [];
+  var ADS = [];
   var LANGS = ["en", "fr"];
   var AREAS = ["lighthouse", "mashraba", "masbat", "assala", "eel-garden", "lagoon", "blue-hole-road"];
   var TYPES = ["studio", "apartment", "villa", "room"];
@@ -38,7 +40,7 @@
     }
     return str;
   }
-  function loc(obj) { return obj ? (obj[lang] || obj.en) : ""; }
+  function loc(obj) { return obj ? (obj[lang] || obj.en || obj.fr || "") : ""; }
 
   function applyStaticTexts() {
     document.documentElement.lang = lang;
@@ -89,6 +91,7 @@
       ["events", "events.html", "nav.events"],
       ["advertise", "advertise.html", "nav.advertise"]
     ];
+    if (DB.enabled) links.push(["account", "account.html", "nav.account"]);
     var header = document.getElementById("site-header");
     if (header) {
       header.innerHTML =
@@ -416,11 +419,30 @@
   }
 
   var PAGES = { home: initHome, listings: initListings, listing: initListing, events: initEvents, host: initHost, advertise: initAdvertise };
+  // Pages qui n'affichent pas le catalogue public (espace hôtes, admin) : pas besoin de le charger.
+  var PRIVATE_PAGES = { login: true, account: true, admin: true };
+
+  window.YD = {
+    t: t, loc: loc, esc: esc, money: money, lang: function () { return lang; },
+    formatDate: formatDate, optionList: optionList, applyStaticTexts: applyStaticTexts,
+    AREAS: AREAS, TYPES: TYPES, AMENITIES: AMENITIES,
+    registerPage: function (name, init) { PAGES[name] = init; PRIVATE_PAGES[name] = true; }
+  };
 
   document.addEventListener("DOMContentLoaded", function () {
+    var page = document.body.dataset.page;
+    if (DB.enabled) document.body.classList.add("db-on");
     renderChrome();
     applyStaticTexts();
-    var init = PAGES[document.body.dataset.page];
-    if (init) init();
+    var init = PAGES[page];
+    if (!init) return;
+    if (PRIVATE_PAGES[page]) { init(); return; }
+    DB.load().then(function (data) {
+      LISTINGS = data.listings;
+      EVENTS = data.events;
+      ADS = data.ads;
+    }, function (err) {
+      console.error("Yalla Dahab: data could not be loaded", err);
+    }).then(init);
   });
 })();
