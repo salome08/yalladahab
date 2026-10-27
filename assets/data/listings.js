@@ -13,7 +13,7 @@ window.YD_LISTINGS = [
       fr: "Dar Bahr, « la Maison de la Mer », est un petit immeuble bohème de trois appartements face à la mer Rouge, dans le quartier bédouin calme d'Assala, à une minute de la plage et deux du marché. Cet appartement au premier étage a un salon vue mer avec coin hamac, un vrai espace de travail avec wifi testé à 50 Mb/s et secours électrique, un lit queen size, une cuisine équipée, la climatisation et un lave-linge. Idéal pour télétravailleurs, plongeurs et amateurs de snorkeling. Réductions à la semaine et au mois. Animaux bienvenus, arrivée autonome. Selon la loi égyptienne, les couples non mariés dont l'un est égyptien ne peuvent pas être accueillis."
     },
     area: "assala", type: "apartment", guests: 2, bedrooms: 1,
-    pricePerNight: 40, pricePerMonth: 800, currency: "USD", wifiMbps: 50,
+    pricePerNight: 40, pricePerMonth: 750, currency: "USD", wifiMbps: 50,
     amenities: ["wifi", "workspace", "seaView", "beachAccess", "hammock", "ac", "kitchen", "washer", "backupPower", "pets", "selfCheckin"],
     photos: [
       "https://a0.muscache.com/im/pictures/hosting/Hosting-1785608202126798337/original/ccf1db38-8aa1-411e-b008-34ba1987b687.jpeg?im_w=1200",
@@ -34,7 +34,7 @@ window.YD_LISTINGS = [
       fr: "Studio rénové au dernier étage de Dar Bahr, à Assala, à une minute de la plage et près des spots de plongée et de snorkeling. Lit double, murs en bois et fenêtre vue mer. Sa grande terrasse privée sur le toit offre une vue panoramique sur la mer et les montagnes, avec un salon bédouin et ses coussins, et une table pour le petit-déjeuner ou travailler dehors. Réfrigérateur, eau chaude, wifi 50 Mb/s, climatisation. Jusqu'à 4 personnes avec le matelas d'appoint. Réductions à la semaine et au mois, arrivée autonome. Selon la loi égyptienne, les couples non mariés dont l'un est égyptien ne peuvent pas être accueillis."
     },
     area: "assala", type: "studio", guests: 4, bedrooms: 1,
-    pricePerNight: 60, pricePerMonth: 1000, currency: "USD", wifiMbps: 50,
+    pricePerNight: 60, pricePerMonth: 1050, currency: "USD", wifiMbps: 50,
     amenities: ["wifi", "seaView", "rooftop", "terrace", "beachAccess", "ac", "kitchen", "washer", "pets", "selfCheckin"],
     photos: [
       "https://a0.muscache.com/im/pictures/hosting/Hosting-1789168428475450808/original/53c35449-a26b-41ea-8e17-8520fb69957f.jpeg?im_w=1200",
