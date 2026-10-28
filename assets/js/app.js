@@ -84,6 +84,35 @@
 
   // ---------- En-tête et pied de page ----------
 
+  // ---------- Thème clair / sombre ----------
+  // Sans choix enregistré, le site suit le réglage du téléphone ; le bouton force l'autre thème.
+
+  var ICON_MOON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>';
+  var ICON_SUN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>';
+
+  function currentTheme() {
+    var forced = document.documentElement.getAttribute("data-theme");
+    if (forced) return forced;
+    return window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+  }
+
+  function setupThemeToggle(button) {
+    function paint() {
+      var dark = currentTheme() === "dark";
+      button.innerHTML = dark ? ICON_SUN : ICON_MOON;
+      var label = t(dark ? "theme.toLight" : "theme.toDark");
+      button.setAttribute("aria-label", label);
+      button.title = label;
+    }
+    button.addEventListener("click", function () {
+      var next = currentTheme() === "dark" ? "light" : "dark";
+      document.documentElement.setAttribute("data-theme", next);
+      storageSet("yd-theme", next);
+      paint();
+    });
+    paint();
+  }
+
   function renderChrome() {
     var page = document.body.dataset.page;
     var links = [
@@ -97,7 +126,6 @@
       header.innerHTML =
         '<div class="container header-inner">' +
           '<a class="logo" href="index.html"><svg class="logo-mark" viewBox="0 0 40 40" aria-hidden="true"><rect width="40" height="40" rx="12" fill="#0b6e78"/><circle cx="26" cy="15" r="6" fill="#ff8a66"/><path d="M6 25q4.5-4 9 0t9 0 10 0" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round"/><path d="M6 31q4.5-4 9 0t9 0 10 0" fill="none" stroke="#7fd6dc" stroke-width="2.6" stroke-linecap="round"/></svg><span>Yalla <b>Dahab</b></span></a>' +
-          '<button class="menu-toggle" aria-label="Menu" aria-expanded="false">☰</button>' +
           '<nav class="main-nav">' +
             links.map(function (l) {
               return '<a href="' + l[1] + '"' + (page === l[0] ? ' aria-current="page"' : "") + ">" + esc(t(l[2])) + "</a>";
@@ -107,11 +135,16 @@
               LANGS.map(function (l) { return '<option value="' + l + '"' + (l === lang ? " selected" : "") + ">" + l.toUpperCase() + "</option>"; }).join("") +
             "</select>" +
           "</nav>" +
+          '<div class="header-tools">' +
+            '<button class="theme-toggle" type="button"></button>' +
+            '<button class="menu-toggle" aria-label="Menu" aria-expanded="false">☰</button>' +
+          "</div>" +
         "</div>";
       header.querySelector(".lang-select").addEventListener("change", function (e) {
         storageSet("yd-lang", e.target.value);
         window.location.reload();
       });
+      setupThemeToggle(header.querySelector(".theme-toggle"));
       var toggle = header.querySelector(".menu-toggle");
       toggle.addEventListener("click", function () {
         var open = header.classList.toggle("open");
