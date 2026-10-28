@@ -46,7 +46,7 @@ Ouvrir `index.html` dans un navigateur suffit. Aucune installation n'est nécess
 
 ## Mettre le site en ligne gratuitement
 
-Avec GitHub Pages : dans le dépôt GitHub, **Settings → Pages → Branch : main / (root) → Save**. Le site est alors disponible à `https://salome08.github.io/yalladahab/`, et un nom de domaine peut être branché plus tard.
+Le site est hébergé gratuitement par GitHub Pages (**Settings → Pages → Branch : main / (root)**) et répond sur **https://yalladahab.com** grâce au fichier `CNAME`. Chez Namecheap (Advanced DNS), le domaine pointe vers GitHub avec quatre enregistrements `A` sur `@` (185.199.108.153, 185.199.109.153, 185.199.110.153, 185.199.111.153) et un `CNAME` `www` vers `salome08.github.io`.
 
 ## Prochaines étapes prévues
 

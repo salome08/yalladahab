@@ -20,6 +20,8 @@ begin
   return new;
 end $$;
 
+revoke execute on function public.handle_new_user() from public, anon, authenticated;
+
 drop trigger if exists on_auth_user_created on auth.users;
 create trigger on_auth_user_created after insert on auth.users
   for each row execute function public.handle_new_user();
@@ -31,13 +33,13 @@ $$;
 
 -- Vrai pour l'admin connectée au site, et pour l'éditeur SQL de Supabase.
 create or replace function public.is_trusted()
-returns boolean language sql stable as $$
+returns boolean language sql stable set search_path = public as $$
   select current_user not in ('anon', 'authenticated') or public.is_admin();
 $$;
 
 -- Un hôte ne peut pas se donner lui-même les droits d'admin.
 create or replace function public.guard_profile()
-returns trigger language plpgsql as $$
+returns trigger language plpgsql set search_path = public as $$
 begin
   if not public.is_trusted() then
     new.is_admin := old.is_admin;
@@ -93,7 +95,7 @@ create index if not exists listings_status_idx on public.listings (status);
 -- Ce qu'un hôte peut changer seul : textes, prix, photos, équipements, et la pause.
 -- La validation, le badge « vérifié » et la mise en avant restent réservés à l'admin.
 create or replace function public.guard_listing()
-returns trigger language plpgsql as $$
+returns trigger language plpgsql set search_path = public as $$
 begin
   new.updated_at := now();
   if public.is_trusted() then
