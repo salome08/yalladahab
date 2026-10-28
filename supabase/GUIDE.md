@@ -21,10 +21,8 @@ Tant que ces étapes ne sont pas faites, le site continue de fonctionner avec le
 Les hôtes se connectent avec un lien reçu par email. Supabase doit savoir vers quelle page les renvoyer.
 
 1. **Authentication** → **URL Configuration**.
-2. **Site URL** : `https://salome08.github.io/yalladahab/`
-3. **Redirect URLs** → **Add URL** : `https://salome08.github.io/yalladahab/account.html`
-
-(Si tu branches plus tard un nom de domaine, ajoute aussi `https://ton-domaine/account.html`.)
+2. **Site URL** : `https://yalladahab.com/`
+3. **Redirect URLs** → **Add URL** : `https://yalladahab.com/account.html` (et, pour l'ancienne adresse, `https://salome08.github.io/yalladahab/account.html`)
 
 ## 4. Brancher le site
 
