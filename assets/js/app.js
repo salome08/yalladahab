@@ -96,7 +96,7 @@
     if (header) {
       header.innerHTML =
         '<div class="container header-inner">' +
-          '<a class="logo" href="index.html"><span class="logo-mark">◐</span> Yalla <b>Dahab</b></a>' +
+          '<a class="logo" href="index.html"><svg class="logo-mark" viewBox="0 0 40 40" aria-hidden="true"><rect width="40" height="40" rx="12" fill="#0b6e78"/><circle cx="26" cy="15" r="6" fill="#ff8a66"/><path d="M6 25q4.5-4 9 0t9 0 10 0" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round"/><path d="M6 31q4.5-4 9 0t9 0 10 0" fill="none" stroke="#7fd6dc" stroke-width="2.6" stroke-linecap="round"/></svg><span>Yalla <b>Dahab</b></span></a>' +
           '<button class="menu-toggle" aria-label="Menu" aria-expanded="false">☰</button>' +
           '<nav class="main-nav">' +
             links.map(function (l) {
