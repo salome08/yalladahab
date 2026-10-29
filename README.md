@@ -29,6 +29,10 @@ L'espace hôtes et l'espace admin fonctionnent avec [Supabase](https://supabase.
 
 Ces règles sont appliquées par la base elle-même (`supabase/schema.sql`), pas seulement par les pages.
 
+## Pages de partage des annonces
+
+Chaque annonce en ligne a une page `stay/<id>.html` (adresse `yalladahab.com/stay/<id>`) avec sa photo, son titre et son prix dans les balises d'aperçu : c'est ce lien que partagent les boutons WhatsApp, Facebook et « Copier le lien ». Ces pages sont créées par `scripts/build-share-pages.mjs`, lancé toutes les 30 minutes par `.github/workflows/share-pages.yml` (ou à la main : onglet **Actions** → **Pages de partage** → **Run workflow**). Une annonce toute nouvelle dont la page n'existe pas encore est redirigée vers sa fiche par `404.html`.
+
 ## Modifier le contenu sans base de données
 
 Tant que Supabase n'est pas configuré, tout le contenu se trouve dans trois fichiers simples :
