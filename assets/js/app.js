@@ -113,6 +113,36 @@
     paint();
   }
 
+  // ---------- Connexion ----------
+
+  // Compte connecté et son profil, ou null. Chargé une seule fois par page.
+  var sessionPromise = null;
+  function session() {
+    if (!sessionPromise) {
+      sessionPromise = !DB.enabled ? Promise.resolve(null) : DB.currentUser().then(function (user) {
+        if (!user) return null;
+        return DB.profile(user.id).then(function (p) { return { user: user, profile: p || {} }; });
+      }).catch(function (err) { console.error(err); return null; });
+    }
+    return sessionPromise;
+  }
+
+  // Point vert sur « Mon espace » quand on est connecté ; pour l'admin, le nombre d'annonces à valider.
+  function showSession(header) {
+    session().then(function (s) {
+      var link = header.querySelector('[data-nav="account"]');
+      if (!s || !link) return;
+      header.classList.add("signed-in");
+      link.title = t("nav.online", { email: s.user.email });
+      link.insertAdjacentHTML("afterbegin", '<span class="online-dot" aria-hidden="true"></span>');
+      if (!s.profile.is_admin) return;
+      DB.pendingCount().then(function (n) {
+        if (!n) return;
+        link.insertAdjacentHTML("beforeend", ' <span class="nav-count" title="' + esc(t("admin.tabPending")) + '">' + n + "</span>");
+      }, function (err) { console.error(err); });
+    });
+  }
+
   function renderChrome() {
     var page = document.body.dataset.page;
     var links = [
@@ -128,7 +158,7 @@
           '<a class="logo" href="index.html"><svg class="logo-mark" viewBox="0 0 40 40" aria-hidden="true"><rect width="40" height="40" rx="12" fill="#0b6e78"/><circle cx="26" cy="15" r="6" fill="#ff8a66"/><path d="M6 25q4.5-4 9 0t9 0 10 0" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round"/><path d="M6 31q4.5-4 9 0t9 0 10 0" fill="none" stroke="#7fd6dc" stroke-width="2.6" stroke-linecap="round"/></svg><span>Yalla <b>Dahab</b></span></a>' +
           '<nav class="main-nav">' +
             links.map(function (l) {
-              return '<a href="' + l[1] + '"' + (page === l[0] ? ' aria-current="page"' : "") + ">" + esc(t(l[2])) + "</a>";
+              return '<a href="' + l[1] + '" data-nav="' + l[0] + '"' + (page === l[0] ? ' aria-current="page"' : "") + ">" + esc(t(l[2])) + "</a>";
             }).join("") +
             '<a class="btn btn-small" href="host.html"' + (page === "host" ? ' aria-current="page"' : "") + ">" + esc(t("nav.host")) + "</a>" +
             '<select class="lang-select" aria-label="' + esc(t("lang.label")) + '">' +
@@ -151,6 +181,7 @@
         toggle.setAttribute("aria-expanded", open ? "true" : "false");
       });
     }
+    if (header && DB.enabled) showSession(header);
     var footer = document.getElementById("site-footer");
     if (footer) {
       footer.innerHTML =
@@ -387,36 +418,24 @@
     }
   }
 
+  // Page « Publier mon logement » : le bouton change selon qu'on est connecté ou non.
   function initHost() {
-    var form = document.getElementById("host-form");
-    form.elements.area.innerHTML = optionList(AREAS, "area.", "—");
-    form.elements.type.innerHTML = optionList(TYPES, "type.", "—");
-    form.elements.area.required = true;
-    form.elements.type.required = true;
-    document.getElementById("amenity-choices").innerHTML = AMENITIES.map(function (a) {
-      return '<label class="check"><input type="checkbox" name="amenities" value="' + a + '"> ' + esc(t("amenity." + a)) + "</label>";
-    }).join("");
-    form.addEventListener("submit", function (e) {
-      e.preventDefault();
-      var f = form.elements;
-      var amenities = Array.prototype.map.call(form.querySelectorAll('[name="amenities"]:checked'), function (c) {
-        return t("amenity." + c.value);
-      });
-      var lines = [
-        t("host.waIntro"), "",
-        "• " + t("host.name") + " : " + f.name.value,
-        "• " + t("host.whatsapp") + " : " + f.whatsapp.value,
-        "• " + t("host.titleField") + " : " + f.title.value,
-        "• " + t("search.area") + " : " + t("area." + f.area.value),
-        "• " + t("search.type") + " : " + t("type." + f.type.value),
-        "• " + t("host.guests") + " : " + f.guests.value + " · " + t("host.bedrooms") + " : " + f.bedrooms.value,
-        "• " + t("host.priceNight") + " : " + f.priceNight.value
-      ];
-      if (f.priceMonth.value) lines.push("• " + t("host.priceMonth") + " : " + f.priceMonth.value);
-      if (f.wifi.value) lines.push("• " + t("host.wifi") + " : " + f.wifi.value);
-      if (amenities.length) lines.push("• " + t("host.amenities") + " : " + amenities.join(", "));
-      lines.push("", f.description.value);
-      window.open(waLink(CONFIG.adminWhatsapp, lines.join("\n")), "_blank", "noopener");
+    var box = document.getElementById("host-cta");
+    if (!DB.enabled) {
+      box.innerHTML = "<p>" + esc(t("host.noDb")) + '</p><a class="btn btn-whatsapp" target="_blank" rel="noopener" href="' +
+        esc(waLink(CONFIG.adminWhatsapp, "")) + '">' + esc(t("host.noDbButton")) + "</a>";
+      return;
+    }
+    session().then(function (s) {
+      if (!s) {
+        box.innerHTML = "<div><h2>" + esc(t("host.account.title")) + "</h2><p>" + esc(t("host.account.text")) + "</p></div>" +
+          '<a class="btn btn-coral" href="login.html">' + esc(t("host.account.button")) + "</a>";
+        return;
+      }
+      box.innerHTML = '<div><h2><span class="online-dot" aria-hidden="true"></span>' +
+          esc(t("host.loggedTitle", { name: s.profile.name || s.user.email })) + "</h2><p>" + esc(t("host.loggedText")) + "</p></div>" +
+        '<div class="space-actions"><a class="btn btn-ghost" href="account.html">' + esc(t("host.myListings")) + "</a>" +
+        '<a class="btn btn-coral" href="account.html?new=1">' + esc(t("host.addListing")) + "</a></div>";
     });
   }
 

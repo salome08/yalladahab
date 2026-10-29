@@ -165,7 +165,23 @@
       profile = res[0] || { id: user.id };
       listings = res[1];
       drawHome();
+      // Lien « Ajouter une annonce » de la page Publier mon logement.
+      if (new URLSearchParams(window.location.search).get("new") === "1") {
+        window.history.replaceState(null, "", "account.html");
+        document.getElementById("new-listing").click();
+      }
+      if (profile.is_admin) showAdminAlert();
     }).catch(showError);
+
+    // Pour l'admin : rappel des annonces à valider en haut de son espace.
+    function showAdminAlert() {
+      DB.pendingCount().then(function (n) {
+        var head = root().querySelector(".space-head");
+        if (!n || !head) return;
+        head.insertAdjacentHTML("beforebegin", '<div class="admin-alert"><span>' + esc(t("account.adminPending", { count: n })) + "</span>" +
+          '<a class="btn btn-coral btn-small" href="admin.html">' + esc(t("account.adminPendingLink")) + "</a></div>");
+      }, function (err) { console.error(err); });
+    }
 
     function profileReady() { return Boolean(profile.name && profile.whatsapp); }
 
@@ -413,9 +429,11 @@
     }).catch(showError);
 
     function pending() { return state.listings.filter(function (l) { return l.status === "pending"; }); }
+    // Annonces en ligne pas encore visitées : il reste à passer les voir pour le badge « vérifié ».
+    function toVisit() { return state.listings.filter(function (l) { return l.status === "published" && !l.verified; }); }
 
     function draw() {
-      var tabs = [["pending", "admin.tabPending", pending().length], ["listings", "admin.tabListings"], ["events", "admin.tabEvents"], ["ads", "admin.tabAds"]];
+      var tabs = [["pending", "admin.tabPending", pending().length], ["visit", "admin.tabToVisit", toVisit().length], ["listings", "admin.tabListings"], ["events", "admin.tabEvents"], ["ads", "admin.tabAds"]];
       root().innerHTML =
         '<div class="space-head"><h1>' + esc(t("admin.title")) + '</h1><a class="btn btn-ghost" href="account.html">' + esc(t("nav.account")) + "</a></div>" +
         '<div class="tabs" role="toolbar">' + tabs.map(function (tab) {
@@ -423,7 +441,7 @@
             (tab[2] ? ' <span class="count">' + tab[2] + "</span>" : "") + "</button>";
         }).join("") + "</div>" +
         '<div id="admin-panel"></div>';
-      ({ pending: drawPending, listings: drawListings, events: drawEvents, ads: drawAds })[state.tab]();
+      ({ pending: drawPending, visit: drawToVisit, listings: drawListings, events: drawEvents, ads: drawAds })[state.tab]();
     }
 
     function panel() { return document.getElementById("admin-panel"); }
@@ -439,6 +457,7 @@
         return '<article class="card review-card" data-id="' + esc(l.id) + '"><div class="card-body">' +
           '<p class="card-meta">' + esc(t("area." + l.area)) + " · " + esc(t("type." + l.type)) + " · " + l.guests + " " + esc(t("card.guests")) + "</p>" +
           "<h3>" + esc(loc(l.title)) + "</h3>" +
+          (l.createdAt ? '<p class="small muted review-meta">' + esc(t("admin.submittedOn", { date: YD.formatDate(l.createdAt.slice(0, 10), { day: "numeric", month: "long", year: "numeric" }) })) + "</p>" : "") +
           "<p>" + esc(loc(l.description)) + "</p>" +
           '<p class="price">' + (l.pricePerNight ? YD.money(l.pricePerNight, l.currency) + " / " + esc(t("card.night")) : esc(t("card.onRequest"))) +
             (l.pricePerMonth ? " · " + YD.money(l.pricePerMonth, l.currency) + " / " + esc(t("card.month")) : "") + "</p>" +
@@ -448,6 +467,19 @@
             '<button type="button" class="btn" data-set="published">' + esc(t("admin.approve")) + "</button></div>" +
         "</div></article>";
       }).join("");
+    }
+
+    function drawToVisit() {
+      var list = toVisit();
+      if (!list.length) { panel().innerHTML = '<p class="empty">' + esc(t("admin.noToVisit")) + "</p>"; return; }
+      panel().innerHTML = '<p class="muted">' + esc(t("admin.toVisitHelp")) + '</p><div class="space-list">' + list.map(function (l) {
+        return '<article class="space-row" data-id="' + esc(l.id) + '">' +
+          '<div class="space-thumb" style="--h:' + (l.hue || 190) + '">' + (l.photos[0] ? '<img src="' + esc(l.photos[0]) + '" alt="" onerror="this.remove()">' : "") + "</div>" +
+          '<div class="space-row-body"><h3><a href="listing.html?id=' + encodeURIComponent(l.id) + '">' + esc(loc(l.title)) + "</a></h3>" +
+            '<p class="small muted">' + esc(t("area." + l.area)) + " · " + esc(l.host.name) + ' · <a href="https://wa.me/' + esc(l.host.whatsapp) + '" target="_blank" rel="noopener">WhatsApp</a></p>' +
+            '<div class="space-row-actions"><button type="button" class="btn btn-small" data-verify>✓ ' + esc(t("admin.markVerified")) + "</button></div>" +
+          "</div></article>";
+      }).join("") + "</div>";
     }
 
     function drawListings() {
@@ -538,7 +570,14 @@
       var card = e.target.closest("[data-id]");
       var set = e.target.closest("[data-set]");
       if (set && card && state.tab === "pending") {
-        DB.updateListing(card.dataset.id, { status: set.dataset.set }).then(function (saved) { replaceListing(saved); draw(); }, showError);
+        DB.updateListing(card.dataset.id, { status: set.dataset.set }).then(function (saved) {
+          replaceListing(saved);
+          draw();
+          if (saved.status === "published") showMessage(t("admin.approvedVisit"));
+        }, showError);
+      }
+      if (e.target.closest("[data-verify]") && card) {
+        DB.updateListing(card.dataset.id, { verified: true }).then(function (saved) { replaceListing(saved); hideMessage(); draw(); }, showError);
       }
       if (e.target.closest("[data-delete-listing]") && card && window.confirm(t("account.confirmDelete"))) {
         DB.deleteListing(card.dataset.id).then(function () {
