@@ -227,6 +227,34 @@
     return client().then(function (sb) { return sb.from("ads").delete().eq("id", id); }).then(data);
   }
 
+  // ---------- Demandes de pub (formulaire de la page Publicité) ----------
+
+  // Envoyée sans compte : la base fixe elle-même le statut et le prix.
+  function sendAdRequest(r) {
+    return client().then(function (sb) { return sb.from("ad_requests").insert(r); }).then(data);
+  }
+  function allAdRequests() {
+    return client().then(function (sb) { return sb.from("ad_requests").select("*").order("created_at", { ascending: false }); }).then(data);
+  }
+  function newAdRequestCount() {
+    return client().then(function (sb) {
+      return sb.from("ad_requests").select("id", { count: "exact", head: true }).eq("status", "new");
+    }).then(function (res) {
+      if (res.error) throw res.error;
+      return res.count || 0;
+    });
+  }
+  // Crée la bannière ou l'événement et marque la demande payée (fonction mark_ad_request_paid).
+  function markAdRequestPaid(id, method) {
+    return client().then(function (sb) { return sb.rpc("mark_ad_request_paid", { request_id: id, method: method }); }).then(data);
+  }
+  function updateAdRequest(id, fields) {
+    return client().then(function (sb) { return sb.from("ad_requests").update(fields).eq("id", id).select().single(); }).then(data);
+  }
+  function deleteAdRequest(id) {
+    return client().then(function (sb) { return sb.from("ad_requests").delete().eq("id", id); }).then(data);
+  }
+
   window.YD_DB = {
     enabled: enabled,
     load: load,
@@ -235,6 +263,8 @@
     myListings: myListings, allListings: allListings, pendingCount: pendingCount, saveListing: saveListing,
     updateListing: updateListing, deleteListing: deleteListing, uploadPhoto: uploadPhoto,
     allEvents: allEvents, saveEvent: saveEvent, deleteEvent: deleteEvent,
-    allAds: allAds, saveAd: saveAd, deleteAd: deleteAd
+    allAds: allAds, saveAd: saveAd, deleteAd: deleteAd,
+    sendAdRequest: sendAdRequest, allAdRequests: allAdRequests, newAdRequestCount: newAdRequestCount,
+    markAdRequestPaid: markAdRequestPaid, updateAdRequest: updateAdRequest, deleteAdRequest: deleteAdRequest
   };
 })();

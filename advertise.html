@@ -46,13 +46,22 @@
   <div class="form-layout">
     <form class="form-card" id="ad-form">
       <h2 class="full" data-i18n="ads.formTitle"></h2>
-      <label class="full"><span data-i18n="ads.business"></span><input name="business" required></label>
       <label class="full"><span data-i18n="ads.offer"></span><select name="offer"></select></label>
-      <label><span data-i18n="ads.startDate"></span><input name="start" type="date" required></label>
-      <label><span data-i18n="ads.weeks"></span><input name="weeks" type="number" min="1" value="1" required></label>
-      <label class="full"><span data-i18n="ads.message"></span><textarea name="message" required></textarea></label>
+      <label><span data-i18n="ads.business"></span><input name="business" required maxlength="120"></label>
+      <label><span data-i18n="ads.whatsapp"></span><input name="whatsapp" type="tel" required maxlength="30" placeholder="+20 10 1234 5678"></label>
+      <label class="full"><span data-i18n="ads.email"></span><input name="email" type="email" maxlength="200"></label>
+      <label><span data-i18n="ads.startDate" data-label-banner="ads.startDate" data-label-event="ads.eventDate"></span><input name="start" type="date" required></label>
+      <label data-only="banner"><span data-i18n="ads.weeksBanner"></span><input name="weeks" type="number" min="1" max="12" value="1" required></label>
+      <label data-only="event"><span data-i18n="ads.eventTime"></span><input name="time" type="time"></label>
+      <label data-only="event"><span data-i18n="ads.eventPlace"></span><input name="place" maxlength="120"></label>
+      <label data-only="event"><span data-i18n="ads.eventCategory"></span><select name="category"></select></label>
+      <label data-only="event"><span data-i18n="ads.eventPrice"></span><input name="price" maxlength="60" data-i18n-placeholder="ads.eventPriceHint"></label>
+      <label class="full"><span data-label-banner="ads.bannerTitle" data-label-event="ads.eventTitle"></span><input name="title" required maxlength="60"></label>
+      <label class="full"><span data-label-banner="ads.bannerText" data-label-event="ads.eventText"></span><textarea name="text" required maxlength="160"></textarea></label>
+      <label class="full" data-only="banner"><span data-i18n="ads.link"></span><input name="link" type="url" maxlength="500" placeholder="https://"></label>
+      <div class="full" data-only="banner"><p class="small muted" data-i18n="ads.preview"></p><div class="banners banner-preview" id="ad-preview"></div></div>
       <p class="full total"><span data-i18n="ads.total"></span> : <strong id="ad-total"></strong></p>
-      <button class="btn btn-whatsapp full" type="submit" data-i18n="ads.submit"></button>
+      <button class="btn btn-coral full" type="submit" data-i18n="ads.submit"></button>
     </form>
     <aside class="side-card"><p data-i18n="ads.payInfo"></p></aside>
   </div>

@@ -7,7 +7,7 @@
   var DB = window.YD_DB;
   var t = YD.t, esc = YD.esc, loc = YD.loc;
   var MAX_PHOTOS = 12;
-  var EVENT_CATEGORIES = ["party", "yoga", "diving", "market", "music", "workshop"];
+  var EVENT_CATEGORIES = YD.EVENT_CATEGORIES;
 
   // ---------- Outils ----------
 
@@ -205,11 +205,16 @@
 
     // Pour l'admin : rappel des annonces à valider en haut de son espace.
     function showAdminAlert() {
-      DB.pendingCount().then(function (n) {
+      function alertBox(text, href) {
         var head = root().querySelector(".space-head");
-        if (!n || !head) return;
-        head.insertAdjacentHTML("beforebegin", '<div class="admin-alert"><span>' + esc(t("account.adminPending", { count: n })) + "</span>" +
-          '<a class="btn btn-coral btn-small" href="admin.html">' + esc(t("account.adminPendingLink")) + "</a></div>");
+        if (head) head.insertAdjacentHTML("beforebegin", '<div class="admin-alert"><span>' + esc(text) + "</span>" +
+          '<a class="btn btn-coral btn-small" href="' + href + '">' + esc(t("account.adminPendingLink")) + "</a></div>");
+      }
+      DB.pendingCount().then(function (n) {
+        if (n) alertBox(t("account.adminPending", { count: n }), "admin.html");
+      }, function (err) { console.error(err); });
+      DB.newAdRequestCount().then(function (n) {
+        if (n) alertBox(t("account.adminRequests", { count: n }), "admin.html?tab=requests");
       }, function (err) { console.error(err); });
     }
 
@@ -442,7 +447,8 @@
 
   function initAdmin() {
     if (!DB.enabled) return notEnabled();
-    var state = { tab: "pending", listings: [], events: [], ads: [] };
+    var tabParam = new URLSearchParams(window.location.search).get("tab");
+    var state = { tab: tabParam || "pending", listings: [], events: [], ads: [], requests: [] };
     EVENT_FIELDS[2].options = EVENT_CATEGORIES.map(function (c) { return { value: c, label: t("cat." + c) }; });
     AD_FIELDS[1].options = ["home", "search"].map(function (s) { return { value: s, label: t("slot." + s) }; });
 
@@ -452,21 +458,25 @@
     }).then(function (p) {
       if (!p) return null;
       if (!p.is_admin) { root().innerHTML = '<p class="empty">' + esc(t("admin.denied")) + "</p>"; return null; }
-      return Promise.all([DB.allListings(), DB.allEvents(), DB.allAds()]);
+      // null : la table des demandes de pub n'est pas encore créée (supabase/ad-requests.sql).
+      return Promise.all([DB.allListings(), DB.allEvents(), DB.allAds(), DB.allAdRequests().catch(function (err) { console.error(err); return null; })]);
     }).then(function (res) {
       if (!res) return;
       state.listings = res[0];
       state.events = res[1];
       state.ads = res[2];
+      state.requests = res[3];
       draw();
     }).catch(showError);
 
     function pending() { return state.listings.filter(function (l) { return l.status === "pending"; }); }
     // Annonces en ligne pas encore visitées : il reste à passer les voir pour le badge « vérifié ».
     function toVisit() { return state.listings.filter(function (l) { return l.status === "published" && !l.verified; }); }
+    function newRequests() { return (state.requests || []).filter(function (r) { return r.status === "new"; }); }
 
     function draw() {
-      var tabs = [["pending", "admin.tabPending", pending().length], ["visit", "admin.tabToVisit", toVisit().length], ["listings", "admin.tabListings"], ["events", "admin.tabEvents"], ["ads", "admin.tabAds"]];
+      var tabs = [["pending", "admin.tabPending", pending().length], ["visit", "admin.tabToVisit", toVisit().length],
+        ["requests", "admin.tabRequests", newRequests().length], ["listings", "admin.tabListings"], ["events", "admin.tabEvents"], ["ads", "admin.tabAds"]];
       root().innerHTML =
         '<div class="space-head"><h1>' + esc(t("admin.title")) + '</h1><a class="btn btn-ghost" href="account.html">' + esc(t("nav.account")) + "</a></div>" +
         '<div class="tabs" role="toolbar">' + tabs.map(function (tab) {
@@ -474,7 +484,8 @@
             (tab[2] ? ' <span class="count">' + tab[2] + "</span>" : "") + "</button>";
         }).join("") + "</div>" +
         '<div id="admin-panel"></div>';
-      ({ pending: drawPending, visit: drawToVisit, listings: drawListings, events: drawEvents, ads: drawAds })[state.tab]();
+      var drawTab = { pending: drawPending, visit: drawToVisit, requests: drawRequests, listings: drawListings, events: drawEvents, ads: drawAds };
+      (drawTab[state.tab] || drawPending)();
     }
 
     function panel() { return document.getElementById("admin-panel"); }
@@ -513,6 +524,118 @@
             '<div class="space-row-actions"><button type="button" class="btn btn-small" data-verify>✓ ' + esc(t("admin.markVerified")) + "</button></div>" +
           "</div></article>";
       }).join("") + "</div>";
+    }
+
+    // ---------- Demandes de pub ----------
+
+    function addDays(iso, n) {
+      var d = new Date(iso + "T12:00:00");
+      d.setDate(d.getDate() + n);
+      return d.toISOString().slice(0, 10);
+    }
+    function longDate(iso) { return YD.formatDate(iso, { day: "numeric", month: "long", year: "numeric" }); }
+    function offerName(kind) { return t({ home: "ads.homeBanner", search: "ads.searchBanner", event: "ads.featuredEvent" }[kind]); }
+    // Période affichée si la demande est payée aujourd'hui (une bannière payée en retard démarre le jour du paiement).
+    function requestPeriod(r) {
+      if (r.kind === "event") return { from: r.starts_on, to: r.starts_on };
+      var today = new Date().toISOString().slice(0, 10);
+      var from = r.starts_on < today ? today : r.starts_on;
+      return { from: from, to: addDays(from, r.weeks * 7 - 1) };
+    }
+    // Bannières déjà prévues au même emplacement sur la même période.
+    function overlappingAds(r) {
+      var p = requestPeriod(r);
+      return state.ads.filter(function (a) {
+        return a.active && a.slot === r.kind && (!a.startsOn || a.startsOn <= p.to) && (!a.endsOn || a.endsOn >= p.from);
+      }).length;
+    }
+
+    function drawRequests() {
+      if (state.requests === null) { panel().innerHTML = '<p class="empty">' + esc(t("admin.reqNotInstalled")) + "</p>"; return; }
+      var list = newRequests();
+      var done = state.requests.filter(function (r) { return r.status !== "new"; });
+      var month = new Date().toISOString().slice(0, 7);
+      var paid = done.filter(function (r) { return r.status === "paid"; });
+      function sum(rows) { return rows.reduce(function (acc, r) { return acc + Number(r.amount || 0); }, 0); }
+      var paidMonth = paid.filter(function (r) { return r.payment_method !== "free" && (r.paid_at || "").slice(0, 7) === month; });
+      var paidAll = paid.filter(function (r) { return r.payment_method !== "free"; });
+
+      panel().innerHTML =
+        '<p class="muted">' + esc(t("admin.reqHelp")) + "</p>" +
+        (list.length ? list.map(function (r) {
+          var p = requestPeriod(r);
+          var full = r.kind !== "event" && overlappingAds(r) >= window.YD_CONFIG.maxBannersPerPage;
+          var waText = window.YD_I18N.en["admin.reqWaMessage"].split("{business}").join(r.business).split("{total}").join(YD.money(r.amount));
+          return '<article class="card review-card" data-request="' + esc(r.id) + '"><div class="card-body">' +
+            '<p class="card-meta">' + esc(offerName(r.kind)) + " · <strong>" + esc(YD.money(r.amount)) + "</strong></p>" +
+            "<h3>" + esc(r.business) + "</h3>" +
+            '<p class="small muted review-meta">' + esc(t("admin.submittedOn", { date: longDate(r.created_at.slice(0, 10)) })) + "</p>" +
+            "<p><strong>" + esc(r.kind === "event"
+              ? t("admin.reqEventOn", { date: longDate(r.starts_on) }) + (r.event_time ? " · " + r.event_time : "") + (r.event_place ? " · " + r.event_place : "")
+              : t("admin.reqPeriod", { from: longDate(p.from), to: longDate(p.to), weeks: r.weeks })) + "</strong></p>" +
+            (full ? '<p class="message message-error">' + esc(t("admin.reqFull")) + "</p>" : "") +
+            (r.kind === "event" ? "" : '<div class="banners banner-preview">' + YD.bannerHtml({
+              hue: 200, link: r.link || "https://wa.me/" + r.whatsapp.replace(/\D/g, ""),
+              title: { en: r.title }, text: { en: r.text }, cta: { en: t(r.link ? "ads.ctaLink" : "ads.ctaWhatsapp") }
+            }) + "</div>") +
+            (r.kind === "event" ? "<p><strong>" + esc(r.title) + "</strong> · " + esc(t("cat." + r.event_category)) + (r.event_price ? " · " + esc(r.event_price) : "") + "</p><p>" + esc(r.text) + "</p>" : "") +
+            (r.link ? '<p class="small"><a href="' + esc(r.link) + '" target="_blank" rel="noopener">' + esc(r.link) + "</a></p>" : "") +
+            '<p class="small">' + esc(r.whatsapp) + ' · <a href="https://wa.me/' + esc(r.whatsapp.replace(/\D/g, "")) + "?text=" + encodeURIComponent(waText) + '" target="_blank" rel="noopener">' + esc(t("admin.reqWrite")) + "</a>" +
+              (r.email ? ' · <a href="mailto:' + esc(r.email) + '">' + esc(r.email) + "</a>" : "") + "</p>" +
+            '<div class="form-actions">' +
+              '<button type="button" class="btn btn-ghost" data-request-reject>' + esc(t("admin.reject")) + "</button>" +
+              '<select data-request-method aria-label="' + esc(t("admin.reqMethod")) + '">' + ["cash", "instapay", "vodafone", "free"].map(function (m) {
+                return '<option value="' + m + '">' + esc(t("pay." + m)) + "</option>";
+              }).join("") + "</select>" +
+              '<button type="button" class="btn" data-request-paid>' + esc(t("admin.reqPaid")) + "</button>" +
+            "</div>" +
+          "</div></article>";
+        }).join("") : '<p class="empty">' + esc(t("admin.reqNone")) + "</p>") +
+        '<div class="section-head space-section"><h2>' + esc(t("admin.reqHistory")) + "</h2></div>" +
+        '<p class="total">' + esc(t("admin.reqRevenue", { month: YD.money(sum(paidMonth)), all: YD.money(sum(paidAll)) })) + "</p>" +
+        '<div class="space-list crud-list">' + (done.length ? done.map(function (r) {
+          return '<div class="crud-row" data-request="' + esc(r.id) + '"><span><strong>' + esc(r.business) + "</strong> · " + esc(offerName(r.kind)) + " · " +
+            esc(YD.money(r.amount)) + " · " +
+            (r.status === "paid"
+              ? '<span class="badge status-published">' + esc(t("pay." + r.payment_method)) + "</span> " + esc(longDate(r.paid_at.slice(0, 10)))
+              : '<span class="badge status-rejected">' + esc(t("status.rejected")) + "</span>") +
+            '</span><span class="space-row-actions"><button type="button" class="link-button danger" data-request-delete>' + esc(t("account.delete")) + "</button></span></div>";
+        }).join("") : '<p class="empty">' + esc(t("admin.empty")) + "</p>") + "</div>";
+    }
+
+    function replaceRequest(saved) {
+      state.requests = state.requests.map(function (x) { return x.id === saved.id ? saved : x; });
+    }
+
+    function handleRequestClick(e) {
+      var box = e.target.closest("[data-request]");
+      if (!box) return false;
+      var id = box.dataset.request;
+      var b = e.target.closest("button");
+      if (!b) return true;
+      if (b.hasAttribute("data-request-paid")) {
+        var method = box.querySelector("[data-request-method]").value;
+        b.disabled = true;
+        DB.markAdRequestPaid(id, method).then(function (saved) {
+          replaceRequest(saved);
+          return Promise.all([DB.allAds(), DB.allEvents()]).then(function (res) {
+            state.ads = res[0];
+            state.events = res[1];
+            draw();
+            showMessage(t(saved.kind === "event" ? "admin.reqLiveEvent" : "admin.reqLiveBanner"));
+          });
+        }).catch(function (err) { b.disabled = false; showError(err); });
+      }
+      if (b.hasAttribute("data-request-reject")) {
+        DB.updateAdRequest(id, { status: "rejected" }).then(function (saved) { replaceRequest(saved); hideMessage(); draw(); }, showError);
+      }
+      if (b.hasAttribute("data-request-delete") && window.confirm(t("account.confirmDelete"))) {
+        DB.deleteAdRequest(id).then(function () {
+          state.requests = state.requests.filter(function (x) { return x.id !== id; });
+          draw();
+        }, showError);
+      }
+      return true;
     }
 
     function drawListings() {
@@ -600,6 +723,7 @@
     root().addEventListener("click", function (e) {
       var tab = e.target.closest("[data-tab]");
       if (tab) { state.tab = tab.dataset.tab; hideMessage(); draw(); return; }
+      if (state.tab === "requests") { handleRequestClick(e); return; }
       var card = e.target.closest("[data-id]");
       var set = e.target.closest("[data-set]");
       if (set && card && state.tab === "pending") {

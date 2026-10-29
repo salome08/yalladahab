@@ -13,7 +13,9 @@
   var TYPES = ["studio", "apartment", "villa", "room"];
   var AMENITIES = ["wifi", "workspace", "seaView", "ac", "kitchen", "terrace", "garden", "washer",
     "rooftop", "pool", "parking", "gearStorage", "backupPower", "beachAccess", "hammock", "pets", "selfCheckin"];
+  // Tarifs en EGP, les mêmes que ad_price() dans supabase/ad-requests.sql.
   var AD_PRICES = { home: 1500, search: 800, event: 300 };
+  var EVENT_CATEGORIES = ["party", "yoga", "diving", "market", "music", "workshop"];
 
   // ---------- Langue ----------
 
@@ -136,9 +138,11 @@
       link.title = t("nav.online", { email: s.user.email });
       link.insertAdjacentHTML("afterbegin", '<span class="online-dot" aria-hidden="true"></span>');
       if (!s.profile.is_admin) return;
-      DB.pendingCount().then(function (n) {
+      // Les demandes de pub ne bloquent pas le compteur si leur table n'est pas encore installée.
+      Promise.all([DB.pendingCount(), DB.newAdRequestCount().catch(function () { return 0; })]).then(function (res) {
+        var n = res[0] + res[1];
         if (!n) return;
-        link.insertAdjacentHTML("beforeend", ' <span class="nav-count" title="' + esc(t("admin.tabPending")) + '">' + n + "</span>");
+        link.insertAdjacentHTML("beforeend", ' <span class="nav-count" title="' + esc(t("admin.toHandle")) + '">' + n + "</span>");
       }, function (err) { console.error(err); });
     });
   }
@@ -196,18 +200,20 @@
 
   // ---------- Bannières ----------
 
+  function bannerHtml(a) {
+    var external = /^https?:/.test(a.link);
+    return '<a class="banner" style="--h:' + a.hue + '" href="' + esc(a.link) + '"' +
+      (external ? ' target="_blank" rel="noopener sponsored"' : "") + ">" +
+      '<span class="banner-label">' + esc(t("ad.label")) + "</span>" +
+      '<span class="banner-body"><strong>' + esc(loc(a.title)) + "</strong><span>" + esc(loc(a.text)) + "</span></span>" +
+      '<span class="banner-cta">' + esc(loc(a.cta)) + " →</span></a>";
+  }
+
   function renderBanners(slot) {
     var el = document.querySelector('[data-banner-slot="' + slot + '"]');
     if (!el) return;
     var ads = ADS.filter(function (a) { return a.active && a.slot === slot; }).slice(0, CONFIG.maxBannersPerPage);
-    var html = ads.map(function (a) {
-      var external = /^https?:/.test(a.link);
-      return '<a class="banner" style="--h:' + a.hue + '" href="' + esc(a.link) + '"' +
-        (external ? ' target="_blank" rel="noopener sponsored"' : "") + ">" +
-        '<span class="banner-label">' + esc(t("ad.label")) + "</span>" +
-        '<span class="banner-body"><strong>' + esc(loc(a.title)) + "</strong><span>" + esc(loc(a.text)) + "</span></span>" +
-        '<span class="banner-cta">' + esc(loc(a.cta)) + " →</span></a>";
-    }).join("");
+    var html = ads.map(bannerHtml).join("");
     if (ads.length < CONFIG.maxBannersPerPage) {
       html += '<a class="banner banner-empty" href="advertise.html">' +
         '<span class="banner-body"><strong>' + esc(t("ad.yours")) + "</strong><span>" + esc(t("ad.yoursText")) + "</span></span>" +
@@ -439,34 +445,92 @@
     });
   }
 
+  // Page Publicité : la demande est enregistrée dans la base et arrive dans l'espace admin
+  // (onglet « Demandes pub ») ; sans base, elle part sur WhatsApp comme avant.
   function initAdvertise() {
     document.querySelectorAll("[data-price]").forEach(function (el) { el.textContent = money(AD_PRICES[el.dataset.price]); });
     var form = document.getElementById("ad-form");
+    var f = form.elements;
     var offerNames = { home: t("ads.homeBanner"), search: t("ads.searchBanner"), event: t("ads.featuredEvent") };
-    form.elements.offer.innerHTML = Object.keys(AD_PRICES).map(function (k) {
+    f.offer.innerHTML = Object.keys(AD_PRICES).map(function (k) {
       return '<option value="' + k + '">' + esc(offerNames[k]) + " · " + money(AD_PRICES[k]) + "</option>";
     }).join("");
+    f.category.innerHTML = EVENT_CATEGORIES.map(function (c) { return '<option value="' + c + '">' + esc(t("cat." + c)) + "</option>"; }).join("");
     var params = new URLSearchParams(window.location.search);
-    if (AD_PRICES[params.get("offer")]) form.elements.offer.value = params.get("offer");
-    form.elements.start.min = new Date().toISOString().slice(0, 10);
-    var totalEl = document.getElementById("ad-total");
-    function total() { return AD_PRICES[form.elements.offer.value] * Math.max(1, Number(form.elements.weeks.value) || 1); }
-    function updateTotal() { totalEl.textContent = money(total()); }
-    form.addEventListener("input", updateTotal);
-    updateTotal();
+    if (AD_PRICES[params.get("offer")]) f.offer.value = params.get("offer");
+    f.start.min = new Date().toISOString().slice(0, 10);
+    var hue = Math.floor(Math.random() * 360);
+
+    function isEvent() { return f.offer.value === "event"; }
+    function weeks() { return isEvent() ? 1 : Math.min(12, Math.max(1, Number(f.weeks.value) || 1)); }
+    function total() { return AD_PRICES[f.offer.value] * weeks(); }
+    function contactLink() { return "https://wa.me/" + f.whatsapp.value.replace(/\D/g, ""); }
+
+    // Champs propres aux bannières ou aux événements, et aperçu de la bannière.
+    function update() {
+      var kind = isEvent() ? "event" : "banner";
+      form.querySelectorAll("[data-only]").forEach(function (el) {
+        el.hidden = el.dataset.only !== kind;
+        el.querySelectorAll("input, select").forEach(function (input) { input.disabled = el.hidden; });
+      });
+      form.querySelectorAll("[data-label-" + kind + "]").forEach(function (el) { el.textContent = t(el.getAttribute("data-label-" + kind)); });
+      f.text.maxLength = isEvent() ? 400 : 160;
+      document.getElementById("ad-total").textContent = money(total());
+      if (!isEvent()) {
+        document.getElementById("ad-preview").innerHTML = bannerHtml({
+          hue: hue, link: f.link.value || contactLink(),
+          title: { en: f.title.value || f.business.value || t("ads.previewTitle") },
+          text: { en: f.text.value || t("ads.previewText") },
+          cta: { en: t(f.link.value ? "ads.ctaLink" : "ads.ctaWhatsapp") }
+        });
+      }
+    }
+    form.addEventListener("input", update);
+    update();
+
+    function summaryLines() {
+      return [
+        "• " + t("ads.offer") + " : " + offerNames[f.offer.value],
+        "• " + t("ads.business") + " : " + f.business.value,
+        "• " + t(isEvent() ? "ads.eventDate" : "ads.startDate") + " : " + formatDate(f.start.value, { day: "numeric", month: "long", year: "numeric" }),
+        isEvent() ? "• " + t("ads.eventTitle") + " : " + f.title.value : "• " + t("ads.weeksBanner") + " : " + weeks(),
+        "• " + t("ads.total") + " : " + money(total())
+      ];
+    }
+
     form.addEventListener("submit", function (e) {
       e.preventDefault();
-      var f = form.elements;
-      var lines = [
-        t("ads.waIntro"), "",
-        "• " + t("ads.business") + " : " + f.business.value,
-        "• " + t("ads.offer") + " : " + offerNames[f.offer.value],
-        "• " + t("ads.startDate") + " : " + (f.start.value ? formatDate(f.start.value, { day: "numeric", month: "long", year: "numeric" }) : "-"),
-        "• " + t("ads.weeks") + " : " + f.weeks.value,
-        "• " + t("ads.total") + " : " + money(total()),
-        "", f.message.value
-      ];
-      window.open(waLink(CONFIG.adminWhatsapp, lines.join("\n")), "_blank", "noopener");
+      if (!DB.enabled) {
+        var lines = [t("ads.waIntro"), ""].concat(summaryLines(), ["", f.title.value, f.text.value]);
+        window.open(waLink(CONFIG.adminWhatsapp, lines.join("\n")), "_blank", "noopener");
+        return;
+      }
+      var row = {
+        kind: f.offer.value, business: f.business.value.trim(), whatsapp: f.whatsapp.value.trim(),
+        email: f.email.value.trim() || null, starts_on: f.start.value, weeks: weeks(),
+        title: f.title.value.trim(), text: f.text.value.trim()
+      };
+      if (isEvent()) {
+        row.event_time = f.time.value; row.event_place = f.place.value.trim();
+        row.event_category = f.category.value; row.event_price = f.price.value.trim();
+      } else {
+        row.link = f.link.value.trim();
+      }
+      var button = form.querySelector('button[type="submit"]');
+      button.disabled = true;
+      DB.sendAdRequest(row).then(function () {
+        var waText = [t("ads.waSent"), ""].concat(summaryLines()).join("\n");
+        form.innerHTML =
+          '<h2 class="full">' + esc(t("ads.sentTitle")) + "</h2>" +
+          '<p class="full">' + esc(t("ads.sentText", { total: money(total()) })) + "</p>" +
+          '<p class="full muted">' + esc(t("ads.sentPay")) + "</p>" +
+          '<a class="btn btn-whatsapp full" target="_blank" rel="noopener" href="' + esc(waLink(CONFIG.adminWhatsapp, waText)) + '">' + esc(t("ads.sentWhatsapp")) + "</a>";
+        form.scrollIntoView({ block: "start" });
+      }, function (err) {
+        console.error(err);
+        button.disabled = false;
+        window.alert(t("ads.sendError"));
+      });
     });
   }
 
@@ -476,8 +540,8 @@
 
   window.YD = {
     t: t, loc: loc, esc: esc, money: money, lang: function () { return lang; },
-    formatDate: formatDate, optionList: optionList, applyStaticTexts: applyStaticTexts,
-    AREAS: AREAS, TYPES: TYPES, AMENITIES: AMENITIES,
+    formatDate: formatDate, bannerHtml: bannerHtml, optionList: optionList, applyStaticTexts: applyStaticTexts,
+    AREAS: AREAS, TYPES: TYPES, AMENITIES: AMENITIES, AD_PRICES: AD_PRICES, EVENT_CATEGORIES: EVENT_CATEGORIES,
     registerPage: function (name, init) { PAGES[name] = init; PRIVATE_PAGES[name] = true; }
   };
 
