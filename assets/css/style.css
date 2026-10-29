@@ -453,3 +453,6 @@ body.db-on .demo-note { display: none; }
 .admin-alert { display: flex; gap: 12px; align-items: center; justify-content: space-between; flex-wrap: wrap; background: var(--accent-soft); color: var(--ink); border: 1.5px solid var(--accent); border-radius: var(--radius); padding: 14px 20px; margin-bottom: 20px; font-weight: 600; }
 .review-meta { margin: 0 0 6px; }
 .code-input { font-size: 1.6rem; font-weight: 800; letter-spacing: .4em; text-align: center; }
+.lang-extra { border: 1.5px dashed var(--line); border-radius: var(--radius-sm); padding: 12px 16px; }
+.lang-extra summary { cursor: pointer; font-weight: 700; color: var(--primary); }
+.lang-extra-body { display: grid; gap: 14px; margin-top: 14px; }
