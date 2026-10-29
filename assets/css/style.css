@@ -452,3 +452,4 @@ body.db-on .demo-note { display: none; }
 .host-cta h2 { margin: 0 0 6px; font-size: 1.25rem; }
 .admin-alert { display: flex; gap: 12px; align-items: center; justify-content: space-between; flex-wrap: wrap; background: var(--accent-soft); color: var(--ink); border: 1.5px solid var(--accent); border-radius: var(--radius); padding: 14px 20px; margin-bottom: 20px; font-weight: 600; }
 .review-meta { margin: 0 0 6px; }
+.code-input { font-size: 1.6rem; font-weight: 800; letter-spacing: .4em; text-align: center; }

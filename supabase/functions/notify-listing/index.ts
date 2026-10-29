@@ -25,12 +25,13 @@ function titleOf(l: Listing) { return l.title?.en || l.title?.fr || "Your listin
 // Même mise en page que les emails de connexion (dossier emails/ des fichiers du projet).
 function layout(heading: string, body: string, button: string, link: string) {
   return `<div style="background:#faf8f4;padding:32px 16px;font-family:'Plus Jakarta Sans',Arial,sans-serif;color:#14212b">
-  <div style="max-width:520px;margin:0 auto;background:#fff;border-radius:18px;padding:32px;border:1px solid #e8e2d8">
-    <p style="margin:0 0 20px;font-size:20px;font-weight:800">Yalla <span style="color:#0b6e78">Dahab</span></p>
+  <div style="max-width:520px;margin:0 auto;background:#fff;border-radius:22px;overflow:hidden;border:1px solid #e8e2d8">
+    <img src="${SITE}/assets/img/email-banner.png" width="520" alt="Yalla Dahab" style="display:block;width:100%;height:auto;border:0">
+    <div style="padding:28px 32px 32px">
     <h1 style="margin:0 0 12px;font-size:22px">${heading}</h1>
     <div style="font-size:15px;line-height:1.6;color:#33414b">${body}</div>
-    <p style="margin:28px 0 0"><a href="${link}" style="background:#0b6e78;color:#fff;text-decoration:none;font-weight:700;padding:12px 22px;border-radius:999px;display:inline-block">${button}</a></p>
-  </div></div>`;
+    <p style="margin:28px 0 0"><a href="${link}" style="background:#e2583a;color:#fff;text-decoration:none;font-weight:700;padding:14px 28px;border-radius:999px;display:inline-block">${button}</a></p>
+  </div></div></div>`;
 }
 
 async function emailOf(userId: string | null) {
