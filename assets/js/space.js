@@ -144,10 +144,40 @@
         var email = form.elements.email.value.trim();
         busy(form, true);
         DB.signIn(email, new URL("account.html", window.location.href).href).then(function () {
-          form.innerHTML = '<p class="full">' + esc(t("login.sent", { email: email })) + "</p>";
+          showCodeForm(email);
         }, function (err) { busy(form, false); showError(err); });
       });
     }).catch(showError);
+
+    // Si le lien de l'email est ouvert dans un autre onglet, cette page se connecte aussi.
+    DB.onSignedIn(function () { window.location.replace("account.html"); });
+  }
+
+  // Après l'envoi de l'email : on peut taper le code reçu ici, sans changer d'onglet.
+  function showCodeForm(email) {
+    root().innerHTML =
+      '<form class="form-card narrow" id="code-form" novalidate>' +
+        '<h1 class="full">' + esc(t("login.checkTitle")) + "</h1>" +
+        '<p class="full muted">' + esc(t("login.sent", { email: email })) + "</p>" +
+        '<label class="full">' + esc(t("login.code")) +
+          '<input name="code" class="code-input" inputmode="numeric" autocomplete="one-time-code" maxlength="14" required placeholder="123456"></label>' +
+        '<button class="btn full" type="submit">' + esc(t("login.codeSubmit")) + "</button>" +
+        '<p class="full small muted">' + esc(t("login.codeHelp")) + ' <button type="button" class="link-button" id="login-retry">' + esc(t("login.retry")) + "</button></p>" +
+      "</form>";
+    var form = document.getElementById("code-form");
+    form.elements.code.focus();
+    document.getElementById("login-retry").addEventListener("click", function () { hideMessage(); initLogin(); });
+    form.addEventListener("submit", function (e) {
+      e.preventDefault();
+      var code = form.elements.code.value.replace(/\D/g, "");
+      form.elements.code.value = code;
+      if (!/^\d{6,10}$/.test(code)) { showMessage(t("login.codeWrong"), true); return; }
+      hideMessage();
+      busy(form, true);
+      DB.verifyCode(email, code).then(function () {
+        window.location.replace("account.html");
+      }, function () { busy(form, false); showMessage(t("login.codeWrong"), true); });
+    });
   }
 
   // ---------- Mon espace ----------

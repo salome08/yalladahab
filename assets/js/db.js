@@ -115,6 +115,21 @@
     }).then(data);
   }
 
+  // Code à 6 chiffres reçu dans l'email de connexion : se connecter sans quitter la page.
+  function verifyCode(email, code) {
+    return client().then(function (sb) {
+      return sb.auth.verifyOtp({ email: email, token: code, type: "email" });
+    }).then(data);
+  }
+
+  // Prévient quand la connexion se fait dans un autre onglet (lien de l'email ouvert ailleurs).
+  function onSignedIn(callback) {
+    window.addEventListener("storage", function (e) {
+      if (!e.key || e.key.indexOf("sb-") !== 0) return;
+      currentUser().then(function (user) { if (user) callback(user); });
+    });
+  }
+
   function signOut() {
     return client().then(function (sb) { return sb.auth.signOut(); });
   }
@@ -215,7 +230,7 @@
   window.YD_DB = {
     enabled: enabled,
     load: load,
-    currentUser: currentUser, signIn: signIn, signOut: signOut,
+    currentUser: currentUser, signIn: signIn, verifyCode: verifyCode, onSignedIn: onSignedIn, signOut: signOut,
     profile: profile, saveProfile: saveProfile,
     myListings: myListings, allListings: allListings, pendingCount: pendingCount, saveListing: saveListing,
     updateListing: updateListing, deleteListing: deleteListing, uploadPhoto: uploadPhoto,
