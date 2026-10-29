@@ -11,10 +11,10 @@ Site de logements et d'agenda local à Dahab : les hôtes publient gratuitement,
 | Fiche logement (bouton WhatsApp pré-rempli avec les dates, partage WhatsApp/Facebook) | `listing.html?id=...` |
 | Agenda des événements | `events.html` |
 | Page pour les hôtes : création de compte, puis ajout de l'annonce depuis « Mon espace » | `host.html` |
-| Offres publicitaires et demande de réservation de bannière | `advertise.html` |
+| Offres publicitaires et formulaire de demande de bannière ou d'événement à la une | `advertise.html` |
 | Connexion des hôtes par lien email | `login.html` |
 | Mon espace : coordonnées, mes annonces (ajout, modification, photos, pause) | `account.html` |
-| Espace admin : validation des annonces, badge vérifié, agenda, bannières | `admin.html` |
+| Espace admin : validation des annonces, badge vérifié, demandes de pub, agenda, bannières | `admin.html` |
 
 Le site est en anglais et en français (sélecteur en haut à droite).
 
@@ -26,6 +26,12 @@ L'espace hôtes et l'espace admin fonctionnent avec [Supabase](https://supabase.
 - Une nouvelle annonce reste invisible jusqu'à sa validation dans l'espace admin. Ensuite, l'hôte peut la modifier ou la mettre en pause librement.
 - Le badge « vérifié », la mise en avant, l'agenda et les bannières sont réservés à l'admin.
 - Une bannière s'arrête toute seule à sa date de fin.
+
+## Bannières et événements payants
+
+Un bar, un centre de plongée ou un organisateur remplit le formulaire de la page Publicité (sans compte) : offre, dates, texte de la bannière ou détails de l'événement. La demande arrive dans l'espace admin, onglet « Demandes pub », avec le montant calculé par la base. Une fois le paiement reçu (espèces, InstaPay, Vodafone Cash, ou offert), l'admin choisit le moyen de paiement et clique sur « Payé : mettre en ligne » : la bannière est créée pour les semaines payées (à partir du jour du paiement si la date de début est passée), ou l'événement est ajouté à l'agenda à la une. L'onglet affiche aussi le total encaissé du mois.
+
+À installer une fois : coller `supabase/ad-requests.sql` dans Supabase → SQL Editor → Run. Les tarifs sont dans ce fichier (`ad_price`) et dans `assets/js/app.js` (`AD_PRICES`) : les changer aux deux endroits.
 
 Ces règles sont appliquées par la base elle-même (`supabase/schema.sql`), pas seulement par les pages.
 
@@ -50,5 +56,5 @@ Le site est hébergé gratuitement par GitHub Pages (**Settings → Pages → Br
 
 ## Prochaines étapes prévues
 
-- Paiement en ligne des bannières (Paymob)
+- Paiement en ligne des bannières (Paymob), quand une société sera enregistrée en Égypte
 - Russe et arabe
