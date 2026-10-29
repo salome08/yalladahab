@@ -153,6 +153,16 @@
     }).then(function (res) { return listingFromRow(data(res)); });
   }
 
+  // Nombre d'annonces en attente de validation (seule l'admin les voit toutes).
+  function pendingCount() {
+    return client().then(function (sb) {
+      return sb.from("listings").select("id", { count: "exact", head: true }).eq("status", "pending");
+    }).then(function (res) {
+      if (res.error) throw res.error;
+      return res.count || 0;
+    });
+  }
+
   // fields : colonnes de la base, ex. { status: "published", verified: true }
   function updateListing(id, fields) {
     return client().then(function (sb) {
@@ -207,7 +217,7 @@
     load: load,
     currentUser: currentUser, signIn: signIn, signOut: signOut,
     profile: profile, saveProfile: saveProfile,
-    myListings: myListings, allListings: allListings, saveListing: saveListing,
+    myListings: myListings, allListings: allListings, pendingCount: pendingCount, saveListing: saveListing,
     updateListing: updateListing, deleteListing: deleteListing, uploadPhoto: uploadPhoto,
     allEvents: allEvents, saveEvent: saveEvent, deleteEvent: deleteEvent,
     allAds: allAds, saveAd: saveAd, deleteAd: deleteAd

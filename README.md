@@ -10,7 +10,7 @@ Site de logements et d'agenda local à Dahab : les hôtes publient gratuitement,
 | Liste des logements avec filtres (quartier, type, nuit ou mois, budget, wifi, vérifié) | `listings.html` |
 | Fiche logement (bouton WhatsApp pré-rempli avec les dates, partage WhatsApp/Facebook) | `listing.html?id=...` |
 | Agenda des événements | `events.html` |
-| Formulaire pour les hôtes (envoyé sur WhatsApp à l'administratrice) | `host.html` |
+| Page pour les hôtes : création de compte, puis ajout de l'annonce depuis « Mon espace » | `host.html` |
 | Offres publicitaires et demande de réservation de bannière | `advertise.html` |
 | Connexion des hôtes par lien email | `login.html` |
 | Mon espace : coordonnées, mes annonces (ajout, modification, photos, pause) | `account.html` |

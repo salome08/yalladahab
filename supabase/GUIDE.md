@@ -44,6 +44,14 @@ La clé « anon public » est faite pour être visible sur le site : les règles
 3. Remplace `ton-email@exemple.com` par ton adresse (deux endroits), puis **Run**.
 4. Recharge **Mon espace** : le bouton **Espace admin** apparaît, avec tes deux annonces Dar Bahr.
 
+## 6. Recevoir un email à chaque nouvelle annonce
+
+Quand un hôte envoie une annonce, tu reçois un email ; quand tu la valides ou la refuses, l'hôte reçoit un email. Les emails partent de hello@yalladahab.com grâce à Resend.
+
+1. **Créer la fonction** : Supabase → **Edge Functions** → **Deploy a new function** → **Via Editor**. Nom : `notify-listing`. Remplace tout le code par le contenu de `supabase/functions/notify-listing/index.ts`, puis **Deploy function**. Dans l'onglet **Details** de la fonction, désactive **Enforce JWT Verification** (la fonction vérifie elle-même que l'appel vient de la base) et enregistre.
+2. **Donner la clé Resend** : sur resend.com → **API Keys** → **Create API Key** (nom `supabase-notify`, permission **Sending access**) → copie la clé. Dans Supabase → **Edge Functions** → **Secrets** → nom `RESEND_API_KEY`, valeur la clé → **Save**.
+3. **Brancher la base** : **SQL Editor** → **New query**, colle le contenu de `supabase/notifications.sql` → **Run**.
+
 ## Bon à savoir
 
 - **Emails de connexion** : Supabase envoie gratuitement quelques emails par heure seulement. C'est suffisant au lancement ; avec plus d'hôtes, il faudra brancher un service d'email (par exemple Resend, gratuit jusqu'à 3 000 emails par mois).

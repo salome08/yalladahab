@@ -4,9 +4,9 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>List your place for free · Yalla Dahab</title>
-  <meta name="description" content="Hosts in Dahab: list your place for free and get requests on WhatsApp.">
+  <meta name="description" content="Hosts in Dahab: create a free account, list your place and get requests on WhatsApp.">
   <meta property="og:title" content="List your place for free · Yalla Dahab">
-  <meta property="og:description" content="Hosts in Dahab: list your place for free and get requests on WhatsApp.">
+  <meta property="og:description" content="Hosts in Dahab: create a free account, list your place and get requests on WhatsApp.">
   <meta property="og:type" content="website">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'><rect width='40' height='40' rx='12' fill='%230b6e78'/><circle cx='26' cy='15' r='6' fill='%23ff8a66'/><path d='M6 25q4.5-4 9 0t9 0 10 0' fill='none' stroke='%23fff' stroke-width='2.6' stroke-linecap='round'/><path d='M6 31q4.5-4 9 0t9 0 10 0' fill='none' stroke='%237fd6dc' stroke-width='2.6' stroke-linecap='round'/></svg>">
   <meta name="theme-color" content="#faf8f4" media="(prefers-color-scheme: light)">
@@ -23,35 +23,23 @@
 
 <div class="container">
   <div class="page-head"><h1 data-i18n="host.title"></h1><p class="muted" data-i18n="host.subtitle"></p></div>
-  <div class="account-cta db-only">
-    <div><h2 data-i18n="host.account.title"></h2><p data-i18n="host.account.text"></p></div>
-    <a class="btn btn-coral" href="login.html" data-i18n="host.account.button"></a>
-  </div>
-  <p class="db-only muted" data-i18n="host.orWhatsapp"></p>
   <div class="form-layout">
-    <form class="form-card" id="host-form">
-      <label><span data-i18n="host.name"></span><input name="name" required autocomplete="name"></label>
-      <label><span data-i18n="host.whatsapp"></span><input name="whatsapp" type="tel" required placeholder="+20 10 1234 5678" autocomplete="tel"></label>
-      <label class="full"><span data-i18n="host.titleField"></span><input name="title" required data-i18n-placeholder="host.titlePlaceholder"></label>
-      <label><span data-i18n="search.area"></span><select name="area"></select></label>
-      <label><span data-i18n="search.type"></span><select name="type"></select></label>
-      <label><span data-i18n="host.guests"></span><input name="guests" type="number" min="1" value="2" required></label>
-      <label><span data-i18n="host.bedrooms"></span><input name="bedrooms" type="number" min="0" value="1" required></label>
-      <label><span data-i18n="host.priceNight"></span><input name="priceNight" type="number" min="0" step="50" required></label>
-      <label><span data-i18n="host.priceMonth"></span><input name="priceMonth" type="number" min="0" step="500"></label>
-      <label><span data-i18n="host.wifi"></span><input name="wifi" type="number" min="0"></label>
-      <div class="full"><label data-i18n="host.amenities"></label><div class="checks" id="amenity-choices"></div></div>
-      <label class="full"><span data-i18n="host.description"></span><textarea name="description" required></textarea></label>
-      <p class="full small muted" data-i18n="host.photos"></p>
-      <button class="btn btn-whatsapp full" type="submit" data-i18n="host.submit"></button>
-    </form>
-    <aside>
+    <div>
+      <div class="account-cta host-cta" id="host-cta"><p class="muted" data-i18n="common.loading"></p></div>
       <div class="side-card">
+        <h2 data-i18n="host.howTitle"></h2>
         <ol class="steps">
           <li data-i18n="host.step1"></li>
           <li data-i18n="host.step2"></li>
           <li data-i18n="host.step3"></li>
+          <li data-i18n="host.step4"></li>
         </ol>
+      </div>
+    </div>
+    <aside>
+      <div class="side-card">
+        <h3 data-i18n="host.free.title"></h3>
+        <p data-i18n="host.free.text"></p>
       </div>
       <div class="side-card">
         <h3 data-i18n="host.network.title"></h3>
