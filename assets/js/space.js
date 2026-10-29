@@ -308,11 +308,15 @@
         '<form class="form-card" id="listing-form" novalidate>' +
           '<h1 class="full">' + esc(t(existing ? "editor.titleEdit" : "editor.titleNew")) + "</h1>" +
           (existing ? '<p class="full">' + statusBadge(existing.status) + "</p>" : "") +
+          // Anglais demandé (compris par tous les voyageurs) ; le français est un plus, replié par défaut.
+          '<label class="full">' + esc(t("editor.title")) + '<input name="title_en" required value="' + esc(l.title.en || "") + '" placeholder="' + esc(t("editor.titlePlaceholder")) + '"></label>' +
+          '<label class="full">' + esc(t("editor.desc")) + '<textarea name="description_en" required>' + esc(l.description.en || "") + "</textarea></label>" +
           '<p class="full small muted">' + esc(t("editor.langHelp")) + "</p>" +
-          fieldsHtml([
-            { name: "title", type: "i18n", labels: { en: "editor.titleEn", fr: "editor.titleFr" } },
-            { name: "description", type: "i18nText", labels: { en: "editor.descEn", fr: "editor.descFr" } }
-          ], l) +
+          '<details class="full lang-extra"' + (l.title.fr || l.description.fr ? " open" : "") + "><summary>" + esc(t("editor.addFrench")) + "</summary>" +
+            '<div class="lang-extra-body">' +
+              "<label>" + esc(t("editor.titleFr")) + '<input name="title_fr" value="' + esc(l.title.fr || "") + '"></label>' +
+              "<label>" + esc(t("editor.descFr")) + '<textarea name="description_fr">' + esc(l.description.fr || "") + "</textarea></label>" +
+            "</div></details>" +
           "<label>" + esc(t("search.area")) + '<select name="area" required>' + YD.optionList(YD.AREAS, "area.", "—") + "</select></label>" +
           "<label>" + esc(t("search.type")) + '<select name="type" required>' + YD.optionList(YD.TYPES, "type.", "—") + "</select></label>" +
           "<label>" + esc(t("host.guests")) + '<input name="guests" type="number" min="1" required value="' + esc(l.guests) + '"></label>' +
@@ -385,8 +389,7 @@
         if (uploading) return;
         hideMessage();
         var text = readFields(form, [{ name: "title", type: "i18n" }, { name: "description", type: "i18nText" }]);
-        var hasPair = ["en", "fr"].some(function (lg) { return text.title[lg] && text.description[lg]; });
-        if (!hasPair) { showMessage(t("editor.needText"), true); return; }
+        if (!text.title.en || !text.description.en) { showMessage(t("editor.needText"), true); return; }
         if (!form.reportValidity()) return;
         var f = form.elements;
         var data = {
