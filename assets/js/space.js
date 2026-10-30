@@ -337,12 +337,27 @@
             '<div class="photo-grid" id="photo-grid"></div>' +
             '<label class="btn btn-ghost file-button">+ ' + esc(t("editor.addPhotos")) + '<input type="file" id="photo-input" accept="image/*" multiple hidden></label>' +
             '<span class="small muted" id="upload-status"></span></div>' +
+          // Synchronisation : lien « Exporter le calendrier » d'Airbnb, lu toutes les heures.
+          '<div class="full calendar-field"><label>' + esc(t("cal.label")) +
+            '<input name="ical" type="url" inputmode="url" placeholder="https://www.airbnb.com/calendar/ical/….ics?s=…"></label>' +
+            '<details class="small muted"><summary>' + esc(t("cal.how")) + "</summary><ol>" +
+              ["cal.step1", "cal.step2", "cal.step3"].map(function (k) { return "<li>" + esc(t(k)) + "</li>"; }).join("") + "</ol></details>" +
+            '<p class="small" id="cal-status"></p></div>' +
           '<div class="full form-actions"><a class="btn btn-ghost" href="account.html">' + esc(t("editor.cancel")) + "</a>" +
             '<button class="btn" type="submit">' + esc(t(existing ? "editor.submitEdit" : "editor.submitNew")) + "</button></div>" +
         "</form>";
 
       var form = document.getElementById("listing-form");
       form.elements.area.value = l.area;
+      var calendarBefore = "";
+      if (existing) DB.calendarOf(existing.id).then(function (cal) {
+        if (!cal) return;
+        calendarBefore = cal.ical_url;
+        form.elements.ical.value = cal.ical_url;
+        document.getElementById("cal-status").textContent = cal.last_error
+          ? t("cal.error")
+          : cal.last_sync ? t("cal.synced", { date: new Date(cal.last_sync).toLocaleString(YD.lang()) }) : "";
+      }, console.error);
       form.elements.type.value = l.type;
       form.elements.currency.value = l.currency || "EGP";
       window.scrollTo(0, 0);
@@ -438,7 +453,11 @@
           host: { name: profile.name, whatsapp: profile.whatsapp }
         };
         busy(form, true);
+        var ical = f.ical.value.trim();
+        if (ical && !/^https:\/\//.test(ical)) { busy(form, false); showMessage(t("cal.badUrl"), true); return; }
         DB.saveListing(data).then(function (saved) {
+          // Le calendrier ne bloque pas l'enregistrement de l'annonce : en cas d'erreur, on le signale seulement.
+          if (ical !== calendarBefore) DB.saveCalendar(saved.id, ical).catch(function (err) { console.error(err); showMessage(t("cal.error"), true); });
           if (existing) listings[listings.indexOf(existing)] = saved;
           else listings.unshift(saved);
           drawHome();

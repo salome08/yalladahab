@@ -347,6 +347,7 @@
           "<h2>" + esc(t("listing.amenities")) + "</h2>" +
           '<ul class="amenities">' + l.amenities.map(function (a) { return "<li>" + esc(t("amenity." + a)) + "</li>"; }).join("") + "</ul>" +
           '<p><a href="https://maps.google.com/?q=' + encodeURIComponent(t("area." + l.area) + ", Dahab, Egypt") + '" target="_blank" rel="noopener">📍 ' + esc(t("listing.map")) + "</a></p>" +
+          '<div id="availability"></div>' +
         "</div>" +
         '<aside class="contact-box">' +
           '<p class="price">' + priceHtml(l) + "</p>" +
@@ -354,6 +355,7 @@
             "<label>" + esc(t("listing.from")) + '<input type="date" id="date-from"></label>' +
             "<label>" + esc(t("listing.to")) + '<input type="date" id="date-to"></label>' +
           "</div>" +
+          '<p class="message message-error small" id="dates-busy" hidden>' + esc(t("cal.taken")) + "</p>" +
           '<a class="btn btn-whatsapp btn-block" id="wa-contact" target="_blank" rel="noopener">' + esc(t("listing.contact")) + "</a>" +
           '<p class="small muted">' + esc(t("listing.contactNote")) + "</p>" +
           '<div class="share">' +
@@ -376,8 +378,19 @@
         : "";
       wa.href = waLink(l.host.whatsapp, t("listing.waMessage", { host: l.host.name, title: title, dates: dates }));
     }
-    from.addEventListener("change", function () { to.min = from.value; updateWa(); });
-    to.addEventListener("change", updateWa);
+    var busy = [];
+    // Prévient si les dates choisies tombent sur une réservation Airbnb (départ non compris).
+    function checkBusy() {
+      var taken = from.value && to.value && busy.some(function (r) { return from.value < r.ends && to.value > r.starts; });
+      document.getElementById("dates-busy").hidden = !taken;
+    }
+    from.addEventListener("change", function () { to.min = from.value; updateWa(); checkBusy(); });
+    to.addEventListener("change", function () { updateWa(); checkBusy(); });
+    DB.busyDates(l.id).then(function (ranges) {
+      busy = ranges || [];
+      if (busy.length) document.getElementById("availability").innerHTML = availabilityHtml(busy);
+      checkBusy();
+    }, function (err) { console.error(err); });
     var today = new Date().toISOString().slice(0, 10);
     from.min = today; to.min = today;
     updateWa();
@@ -388,6 +401,36 @@
       if (navigator.clipboard) navigator.clipboard.writeText(pageUrl).then(done, function () { window.prompt("", pageUrl); });
       else window.prompt("", pageUrl);
     });
+  }
+
+  // ---------- Disponibilités (calendrier Airbnb synchronisé) ----------
+
+  function isoDay(d) { return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); }
+
+  // Deux mois à partir d'aujourd'hui ; les nuits réservées sont barrées.
+  function availabilityHtml(busy) {
+    var today = isoDay(new Date());
+    var first = new Date();
+    first.setDate(1);
+    var months = [0, 1].map(function (offset) {
+      var m = new Date(first.getFullYear(), first.getMonth() + offset, 1);
+      var days = new Date(m.getFullYear(), m.getMonth() + 1, 0).getDate();
+      var lead = (m.getDay() + 6) % 7; // semaine qui commence le lundi
+      var cells = [];
+      for (var i = 0; i < lead; i++) cells.push("<span></span>");
+      for (var d = 1; d <= days; d++) {
+        var iso = isoDay(new Date(m.getFullYear(), m.getMonth(), d));
+        var taken = busy.some(function (r) { return iso >= r.starts && iso < r.ends; });
+        cells.push('<span class="' + (iso < today ? "past" : taken ? "taken" : "free") + '">' + d + "</span>");
+      }
+      var head = [1, 2, 3, 4, 5, 6, 0].map(function (wd) {
+        return "<b>" + esc(new Date(2024, 0, 7 + wd).toLocaleDateString(lang, { weekday: "narrow" })) + "</b>";
+      }).join("");
+      return '<div class="cal-month"><h3>' + esc(m.toLocaleDateString(lang, { month: "long", year: "numeric" })) + "</h3>" +
+        '<div class="cal-grid">' + head + cells.join("") + "</div></div>";
+    }).join("");
+    return "<h2>" + esc(t("cal.title")) + '</h2><div class="cal-months">' + months + "</div>" +
+      '<p class="small muted"><span class="cal-key taken"></span> ' + esc(t("cal.legendTaken")) + ' &nbsp; <span class="cal-key free"></span> ' + esc(t("cal.legendFree")) + "</p>";
   }
 
   // ---------- Photos de la fiche : galerie + carrousel plein écran ----------

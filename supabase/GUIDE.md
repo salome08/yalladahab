@@ -56,6 +56,12 @@ Quand un hôte envoie une annonce, tu reçois un email ; quand tu la valides ou 
 
 Supabase → **Edge Functions** → **Deploy a new function** → **Via Editor**, nom `import-airbnb`, colle le contenu de `supabase/functions/import-airbnb/index.ts`, **Deploy function**, puis dans **Details** désactive **Enforce JWT Verification** (la fonction vérifie elle-même que l'hôte est connecté). Aucun secret à ajouter.
 
+## 9. Calendrier Airbnb
+
+1. Supabase → **Edge Functions** → **Deploy a new function** → **Via Editor**, nom `sync-calendars`, colle `supabase/functions/sync-calendars/index.ts`, **Deploy function**, puis désactive **Enforce JWT Verification** dans **Details**.
+2. **SQL Editor** → **New query**, colle `supabase/calendar.sql` → **Run** (tables `listing_calendars` et `listing_busy`, et lecture des calendriers toutes les heures avec pg_cron).
+3. Chaque hôte colle le lien « Exporter le calendrier » d'Airbnb dans son annonce.
+
 ## Bon à savoir
 
 - **Emails de connexion** : Supabase envoie gratuitement quelques emails par heure seulement. C'est suffisant au lancement ; avec plus d'hôtes, il faudra brancher un service d'email (par exemple Resend, gratuit jusqu'à 3 000 emails par mois).

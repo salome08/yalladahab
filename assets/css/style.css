@@ -488,3 +488,18 @@ body.db-on .demo-note { display: none; }
 .import-box p { margin: 4px 0 10px; }
 .import-row { display: flex; gap: 8px; flex-wrap: wrap; }
 .import-row input { flex: 1 1 220px; }
+/* Disponibilités (calendrier Airbnb) */
+.cal-months { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 24px; margin: 8px 0 10px; }
+.cal-month h3 { margin: 0 0 8px; font-size: 1rem; text-transform: capitalize; }
+.cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; text-align: center; font-size: .85rem; }
+.cal-grid b { font-size: .72rem; color: var(--muted); text-transform: uppercase; padding-bottom: 2px; }
+.cal-grid span { padding: 6px 0; border-radius: 8px; }
+.cal-grid .free { background: var(--success-soft); color: var(--success); font-weight: 600; }
+.cal-grid .taken { color: var(--muted); text-decoration: line-through; background: var(--surface-2); }
+.cal-grid .past { color: var(--line); }
+.cal-key { display: inline-block; width: 12px; height: 12px; border-radius: 4px; vertical-align: middle; }
+.cal-key.taken { background: var(--surface-2); border: 1px solid var(--line); }
+.cal-key.free { background: var(--success-soft); }
+.calendar-field details { margin-top: 6px; }
+.calendar-field details ol { margin: 6px 0 0; padding-left: 20px; }
+#dates-busy { margin: 0 0 10px; }
