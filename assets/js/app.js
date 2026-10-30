@@ -336,10 +336,7 @@
 
     root.innerHTML =
       '<a class="back" href="listings.html">← ' + esc(t("listing.back")) + "</a>" +
-      '<div class="gallery">' + photo(l.hue, t("type." + l.type), photoOf(l, 0)) + photo(l.hue + 25, "", photoOf(l, 1)) + photo(l.hue - 25, "", photoOf(l, 2)) + "</div>" +
-      (l.photos && l.photos.length > 3 ? '<div class="more-photos">' + l.photos.slice(3).map(function (src) {
-        return '<img src="' + esc(src) + '" alt="" loading="lazy" onerror="this.remove()">';
-      }).join("") + "</div>" : "") +
+      galleryHtml(l) +
       '<div class="listing-layout">' +
         "<div>" +
           '<p class="card-meta">' + esc(t("area." + l.area)) + " · " + esc(t("type." + l.type)) + " · " + l.guests + " " + esc(t("card.guests")) + "</p>" +
@@ -368,6 +365,8 @@
         "</aside>" +
       "</div>";
 
+    setupGallery(l.photos || []);
+
     var from = document.getElementById("date-from");
     var to = document.getElementById("date-to");
     var wa = document.getElementById("wa-contact");
@@ -389,6 +388,84 @@
       if (navigator.clipboard) navigator.clipboard.writeText(pageUrl).then(done, function () { window.prompt("", pageUrl); });
       else window.prompt("", pageUrl);
     });
+  }
+
+  // ---------- Photos de la fiche : galerie + carrousel plein écran ----------
+
+  // Ordinateur : grande photo + 2 petites. Téléphone : on fait défiler toutes les photos du doigt.
+  // Un clic sur une photo ouvre le carrousel plein écran.
+  function galleryHtml(l) {
+    var photos = l.photos || [];
+    if (!photos.length) {
+      return '<div class="gallery">' + photo(l.hue, t("type." + l.type)) + photo(l.hue + 25, "") + photo(l.hue - 25, "") + "</div>";
+    }
+    return '<div class="gallery-wrap"><div class="gallery has-photos" id="gallery">' + photos.map(function (src, i) {
+      return '<button type="button" class="photo" data-photo="' + i + '" aria-label="' + esc(t("listing.photoN", { n: i + 1, total: photos.length })) + '">' +
+        '<img src="' + esc(src) + '" alt="" ' + (i ? 'loading="lazy" ' : "") + 'onerror="this.remove()"></button>';
+    }).join("") + "</div>" +
+      (photos.length > 1 ? '<span class="gallery-count" id="gallery-count">1 / ' + photos.length + "</span>" +
+        '<button type="button" class="gallery-all" data-photo="0">▦ ' + esc(t("listing.showAll", { count: photos.length })) + "</button>" : "") +
+      "</div>";
+  }
+
+  function setupGallery(photos) {
+    var gallery = document.getElementById("gallery");
+    if (!gallery) return;
+    var count = document.getElementById("gallery-count");
+    gallery.addEventListener("scroll", function () {
+      if (count) count.textContent = (Math.round(gallery.scrollLeft / gallery.clientWidth) + 1) + " / " + photos.length;
+    }, { passive: true });
+    gallery.parentNode.addEventListener("click", function (e) {
+      var b = e.target.closest("[data-photo]");
+      if (b) openLightbox(photos, Number(b.dataset.photo));
+    });
+  }
+
+  function openLightbox(photos, start) {
+    var box = document.createElement("div");
+    box.className = "lightbox";
+    box.setAttribute("role", "dialog");
+    box.setAttribute("aria-modal", "true");
+    box.innerHTML =
+      '<div class="lightbox-bar"><span class="lightbox-count"></span>' +
+        '<button type="button" class="lightbox-close" aria-label="' + esc(t("listing.close")) + '">✕</button></div>' +
+      '<div class="lightbox-track">' + photos.map(function (src) {
+        return '<figure><img src="' + esc(src) + '" alt="" loading="lazy"></figure>';
+      }).join("") + "</div>" +
+      (photos.length > 1
+        ? '<button type="button" class="lightbox-nav prev" aria-label="' + esc(t("listing.prev")) + '">‹</button>' +
+          '<button type="button" class="lightbox-nav next" aria-label="' + esc(t("listing.next")) + '">›</button>'
+        : "");
+    document.body.appendChild(box);
+    document.body.classList.add("no-scroll");
+    var track = box.querySelector(".lightbox-track");
+    var counter = box.querySelector(".lightbox-count");
+    function current() { return Math.round(track.scrollLeft / track.clientWidth); }
+    function go(i) {
+      i = (i + photos.length) % photos.length;
+      track.scrollTo({ left: i * track.clientWidth, behavior: "smooth" });
+    }
+    function paint() { counter.textContent = (current() + 1) + " / " + photos.length; }
+    track.scrollLeft = start * track.clientWidth;
+    paint();
+    track.addEventListener("scroll", paint, { passive: true });
+    function close() {
+      document.removeEventListener("keydown", onKey);
+      document.body.classList.remove("no-scroll");
+      box.remove();
+    }
+    function onKey(e) {
+      if (e.key === "Escape") close();
+      if (e.key === "ArrowRight") go(current() + 1);
+      if (e.key === "ArrowLeft") go(current() - 1);
+    }
+    document.addEventListener("keydown", onKey);
+    box.addEventListener("click", function (e) {
+      if (e.target.closest(".lightbox-close") || e.target === box) close();
+      if (e.target.closest(".next")) go(current() + 1);
+      if (e.target.closest(".prev")) go(current() - 1);
+    });
+    box.querySelector(".lightbox-close").focus();
   }
 
   function initEvents() {
