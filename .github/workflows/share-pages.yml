@@ -1,0 +1,36 @@
+# Met à jour les pages de partage des annonces (dossier stay/) toutes les 30 minutes.
+# Pour le lancer tout de suite : onglet Actions → « Pages de partage » → Run workflow.
+name: Pages de partage
+
+on:
+  schedule:
+    - cron: "*/30 * * * *"
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: [listing.html, scripts/build-share-pages.mjs, assets/js/i18n.js]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: share-pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: node scripts/build-share-pages.mjs
+      - name: Enregistrer les changements
+        run: |
+          git add -A stay
+          if git diff --cached --quiet; then echo "Rien de nouveau"; exit 0; fi
+          git config user.name "yalla-dahab-bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "Mettre à jour les pages de partage des annonces"
+          git push

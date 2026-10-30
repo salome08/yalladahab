@@ -308,6 +308,11 @@
         '<form class="form-card" id="listing-form" novalidate>' +
           '<h1 class="full">' + esc(t(existing ? "editor.titleEdit" : "editor.titleNew")) + "</h1>" +
           (existing ? '<p class="full">' + statusBadge(existing.status) + "</p>" : "") +
+          // Import rapide : on colle le lien Airbnb et le formulaire se remplit.
+          (existing ? "" : '<div class="full import-box"><strong>' + esc(t("import.title")) + '</strong><p class="small muted">' + esc(t("import.help")) + "</p>" +
+            '<div class="import-row"><input type="url" id="import-url" placeholder="https://www.airbnb.com/rooms/…" inputmode="url">' +
+            '<button type="button" class="btn btn-coral" id="import-go">' + esc(t("import.button")) + "</button></div>" +
+            '<span class="small muted" id="import-status"></span></div>') +
           // Anglais demandé (compris par tous les voyageurs) ; le français est un plus, replié par défaut.
           '<label class="full">' + esc(t("editor.title")) + '<input name="title_en" required value="' + esc(l.title.en || "") + '" placeholder="' + esc(t("editor.titlePlaceholder")) + '"></label>' +
           '<label class="full">' + esc(t("editor.desc")) + '<textarea name="description_en" required>' + esc(l.description.en || "") + "</textarea></label>" +
@@ -358,6 +363,34 @@
         if (b.dataset.remove) photos.splice(Number(b.dataset.remove), 1);
         if (b.dataset.cover) photos.unshift(photos.splice(Number(b.dataset.cover), 1)[0]);
         drawPhotos();
+      });
+
+      var importBtn = document.getElementById("import-go");
+      if (importBtn) importBtn.addEventListener("click", function () {
+        var link = document.getElementById("import-url").value.trim();
+        var status = document.getElementById("import-status");
+        if (!/airbnb\.|abnb\.me/i.test(link)) { showMessage(t("import.badUrl"), true); return; }
+        hideMessage();
+        status.textContent = t("import.loading");
+        uploading = true;
+        busy(form, true);
+        DB.importAirbnb(link).then(function (r) {
+          var f = form.elements;
+          if (r.title) f.title_en.value = r.title;
+          if (r.description) f.description_en.value = r.description;
+          if (r.guests) f.guests.value = r.guests;
+          if (r.bedrooms != null) f.bedrooms.value = r.bedrooms;
+          if (r.type && YD.TYPES.indexOf(r.type) !== -1) f.type.value = r.type;
+          photos = photos.concat(r.photos || []).slice(0, MAX_PHOTOS);
+          drawPhotos();
+          status.textContent = "";
+          showMessage(t("import.done", { count: (r.photos || []).length }));
+        }, function (err) {
+          status.textContent = "";
+          var code = (err && err.message) || "";
+          showMessage(t(code === "bad_url" ? "import.badUrl" : "import.failed"), true);
+          console.error(err);
+        }).then(function () { uploading = false; busy(form, false); });
       });
 
       var uploading = false;

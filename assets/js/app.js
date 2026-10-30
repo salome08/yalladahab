@@ -321,7 +321,8 @@
   }
 
   function initListing() {
-    var id = new URLSearchParams(window.location.search).get("id");
+    // stay/<id>.html (page de partage) donne l'id dans la page ; listing.html?id=… dans l'adresse.
+    var id = document.body.dataset.listingId || new URLSearchParams(window.location.search).get("id");
     var l = LISTINGS.filter(function (x) { return x.id === id; })[0];
     var root = document.getElementById("listing");
     if (!l) {
@@ -330,7 +331,8 @@
     }
     var title = loc(l.title);
     document.title = title + " · Yalla Dahab";
-    var pageUrl = window.location.href;
+    // Lien partagé : la page stay/<id> a sa photo et son titre en aperçu sur WhatsApp et Facebook.
+    var pageUrl = "https://yalladahab.com/stay/" + encodeURIComponent(l.id);
 
     root.innerHTML =
       '<a class="back" href="listings.html">← ' + esc(t("listing.back")) + "</a>" +
