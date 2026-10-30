@@ -192,6 +192,38 @@
     });
   }
 
+  // ---------- Calendrier Airbnb ----------
+
+  // Lien iCal de l'annonce (visible seulement par l'hôte et l'admin), ou null.
+  function calendarOf(listingId) {
+    return client().then(function (sb) {
+      return sb.from("listing_calendars").select("*").eq("listing_id", listingId).maybeSingle();
+    }).then(data);
+  }
+
+  // Enregistre le lien (ou le retire s'il est vide), puis lit tout de suite le calendrier.
+  function saveCalendar(listingId, url) {
+    return client().then(function (sb) {
+      var q = url
+        ? sb.from("listing_calendars").upsert({ listing_id: listingId, ical_url: url })
+        : sb.from("listing_calendars").delete().eq("listing_id", listingId);
+      return q.then(data).then(function () {
+        return sb.functions.invoke("sync-calendars", { body: { listing_id: listingId } });
+      });
+    }).then(function (res) {
+      if (res.error) throw res.error;
+      return res.data;
+    });
+  }
+
+  // Périodes réservées à venir : [{ starts: "2026-11-01", ends: "2026-11-05" }] (départ non compris).
+  function busyDates(listingId) {
+    if (!enabled) return Promise.resolve([]);
+    return client().then(function (sb) {
+      return sb.from("listing_busy").select("starts, ends").eq("listing_id", listingId).order("starts");
+    }).then(data);
+  }
+
   // fields : colonnes de la base, ex. { status: "published", verified: true }
   function updateListing(id, fields) {
     return client().then(function (sb) {
@@ -246,7 +278,8 @@
     load: load,
     currentUser: currentUser, signIn: signIn, verifyCode: verifyCode, onSignedIn: onSignedIn, signOut: signOut,
     profile: profile, saveProfile: saveProfile,
-    myListings: myListings, allListings: allListings, pendingCount: pendingCount, importAirbnb: importAirbnb, saveListing: saveListing,
+    myListings: myListings, allListings: allListings, pendingCount: pendingCount, importAirbnb: importAirbnb,
+    calendarOf: calendarOf, saveCalendar: saveCalendar, busyDates: busyDates, saveListing: saveListing,
     updateListing: updateListing, deleteListing: deleteListing, uploadPhoto: uploadPhoto,
     allEvents: allEvents, saveEvent: saveEvent, deleteEvent: deleteEvent,
     allAds: allAds, saveAd: saveAd, deleteAd: deleteAd
