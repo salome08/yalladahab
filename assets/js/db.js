@@ -178,6 +178,20 @@
     });
   }
 
+  // Lit une annonce Airbnb (fonction import-airbnb) : titre, description, voyageurs, chambres, photos.
+  function importAirbnb(url) {
+    return client().then(function (sb) {
+      return sb.functions.invoke("import-airbnb", { body: { url: url } });
+    }).then(function (res) {
+      if (res.error) {
+        // Le message d'erreur de la fonction est dans la réponse.
+        var ctx = res.error.context;
+        return ctx && ctx.json ? ctx.json().then(function (b) { throw new Error(b.error || res.error.message); }) : Promise.reject(res.error);
+      }
+      return res.data;
+    });
+  }
+
   // fields : colonnes de la base, ex. { status: "published", verified: true }
   function updateListing(id, fields) {
     return client().then(function (sb) {
@@ -232,7 +246,7 @@
     load: load,
     currentUser: currentUser, signIn: signIn, verifyCode: verifyCode, onSignedIn: onSignedIn, signOut: signOut,
     profile: profile, saveProfile: saveProfile,
-    myListings: myListings, allListings: allListings, pendingCount: pendingCount, saveListing: saveListing,
+    myListings: myListings, allListings: allListings, pendingCount: pendingCount, importAirbnb: importAirbnb, saveListing: saveListing,
     updateListing: updateListing, deleteListing: deleteListing, uploadPhoto: uploadPhoto,
     allEvents: allEvents, saveEvent: saveEvent, deleteEvent: deleteEvent,
     allAds: allAds, saveAd: saveAd, deleteAd: deleteAd

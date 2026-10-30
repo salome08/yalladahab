@@ -456,3 +456,7 @@ body.db-on .demo-note { display: none; }
 .lang-extra { border: 1.5px dashed var(--line); border-radius: var(--radius-sm); padding: 12px 16px; }
 .lang-extra summary { cursor: pointer; font-weight: 700; color: var(--primary); }
 .lang-extra-body { display: grid; gap: 14px; margin-top: 14px; }
+.import-box { background: var(--accent-soft); border-radius: var(--radius-sm); padding: 16px 18px; }
+.import-box p { margin: 4px 0 10px; }
+.import-row { display: flex; gap: 8px; flex-wrap: wrap; }
+.import-row input { flex: 1 1 220px; }

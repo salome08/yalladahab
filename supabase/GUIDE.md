@@ -52,6 +52,10 @@ Quand un hôte envoie une annonce, tu reçois un email ; quand tu la valides ou 
 2. **Donner la clé Resend** : sur resend.com → **API Keys** → **Create API Key** (nom `supabase-notify`, permission **Sending access**) → copie la clé. Dans Supabase → **Edge Functions** → **Secrets** → nom `RESEND_API_KEY`, valeur la clé → **Save**.
 3. **Brancher la base** : **SQL Editor** → **New query**, colle le contenu de `supabase/notifications.sql` → **Run**.
 
+## 8. Import rapide depuis Airbnb
+
+Supabase → **Edge Functions** → **Deploy a new function** → **Via Editor**, nom `import-airbnb`, colle le contenu de `supabase/functions/import-airbnb/index.ts`, **Deploy function**, puis dans **Details** désactive **Enforce JWT Verification** (la fonction vérifie elle-même que l'hôte est connecté). Aucun secret à ajouter.
+
 ## Bon à savoir
 
 - **Emails de connexion** : Supabase envoie gratuitement quelques emails par heure seulement. C'est suffisant au lancement ; avec plus d'hôtes, il faudra brancher un service d'email (par exemple Resend, gratuit jusqu'à 3 000 emails par mois).
