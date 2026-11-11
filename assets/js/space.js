@@ -121,6 +121,23 @@
     });
   }
 
+  // Admin : demande l'email de l'hôte puis lui donne l'annonce. Renvoie null si annulé.
+  function giveToHost(l) {
+    var email = window.prompt(t("give.prompt", { name: l.host.name }));
+    if (!email || !email.trim()) return null;
+    email = email.trim();
+    return DB.giveListing(l.id, email).then(function (saved) {
+      showMessage(t("give.done", { email: email }));
+      return saved;
+    }, function (err) {
+      var msg = String((err && err.message) || "");
+      if (msg.indexOf("NO_ACCOUNT") !== -1) showMessage(t("give.noAccount"), true);
+      else if (/give_listing|PGRST202|function/i.test(msg)) showMessage(t("give.notInstalled"), true);
+      else showError(err);
+      throw err;
+    });
+  }
+
   function statusBadge(status) {
     return '<span class="badge status status-' + esc(status) + '">' + esc(t("status." + status)) + "</span>";
   }
@@ -256,6 +273,9 @@
       drawList();
     }
 
+    // Annonce que l'admin gère pour un autre hôte (contact différent du sien).
+    function forOther(l) { return profile.is_admin && l.host && l.host.whatsapp !== profile.whatsapp; }
+
     function drawList() {
       var box = document.getElementById("my-listings");
       if (!listings.length) { box.innerHTML = '<p class="empty">' + esc(t("account.empty")) + "</p>"; return; }
@@ -265,8 +285,10 @@
         return '<article class="space-row" data-id="' + esc(l.id) + '">' +
           '<div class="space-thumb" style="--h:' + (l.hue || 190) + '">' + cover + "</div>" +
           '<div class="space-row-body"><h3>' + YD.locHtml(l.title) + "</h3>" + statusBadge(l.status) +
+            (forOther(l) ? ' <span class="small muted">' + esc(t("account.forHost", { name: l.host.name })) + "</span>" : "") +
             '<div class="space-row-actions">' +
               '<button type="button" class="link-button" data-action="edit">' + esc(t("account.edit")) + "</button>" +
+              (forOther(l) ? '<button type="button" class="link-button" data-action="give">' + esc(t("give.button")) + "</button>" : "") +
               (toggle ? '<button type="button" class="link-button" data-action="status" data-status="' + toggle[0] + '">' + esc(t(toggle[1])) + "</button>" : "") +
               (l.status === "published" ? '<a href="listing.html?id=' + encodeURIComponent(l.id) + '">' + esc(t("account.view")) + "</a>" : "") +
               '<button type="button" class="link-button danger" data-action="delete">' + esc(t("account.delete")) + "</button>" +
@@ -282,6 +304,13 @@
       if (!l) return;
       hideMessage();
       if (b.dataset.action === "edit") drawEditor(l);
+      if (b.dataset.action === "give") {
+        var giving = giveToHost(l);
+        if (giving) giving.then(function () {
+          listings.splice(listings.indexOf(l), 1);
+          drawList();
+        }, function () {});
+      }
       if (b.dataset.action === "status") {
         DB.updateListing(l.id, { status: b.dataset.status }).then(function (saved) {
           listings[listings.indexOf(l)] = saved;
@@ -303,6 +332,7 @@
         hue: Math.floor(Math.random() * 360)
       };
       var photos = l.photos.slice();
+      var host = existing ? existing.host : { name: profile.name, whatsapp: profile.whatsapp };
       root().innerHTML =
         '<a class="back" href="account.html"><span class="arrow">←</span> ' + esc(t("account.myListings")) + "</a>" +
         '<form class="form-card" id="listing-form" novalidate>' +
@@ -313,6 +343,10 @@
             '<div class="import-row"><input type="url" id="import-url" placeholder="https://www.airbnb.com/rooms/…" inputmode="url">' +
             '<button type="button" class="btn btn-coral" id="import-go">' + esc(t("import.button")) + "</button></div>" +
             '<span class="small muted" id="import-status"></span></div>') +
+          // Admin : le contact affiché peut être celui d'un autre hôte.
+          (profile.is_admin ? '<div class="full import-box"><strong>' + esc(t("editor.hostTitle")) + '</strong><p class="small muted">' + esc(t("editor.hostHelp")) + "</p>" +
+            '<div class="host-fields"><label>' + esc(t("editor.hostName")) + '<input name="host_name" required value="' + esc(host.name || "") + '"></label>' +
+            "<label>" + esc(t("editor.hostWhatsapp")) + '<input name="host_whatsapp" type="tel" required placeholder="+20 10 1234 5678" value="' + esc(host.whatsapp || "") + '"></label></div></div>' : "") +
           // Anglais demandé (compris par tous les voyageurs) ; le français est un plus, replié par défaut.
           '<label class="full">' + esc(t("editor.title")) + '<input name="title_en" dir="auto" required value="' + esc(l.title.en || "") + '" placeholder="' + esc(t("editor.titlePlaceholder")) + '"></label>' +
           '<label class="full">' + esc(t("editor.desc")) + '<textarea name="description_en" dir="auto" required>' + esc(l.description.en || "") + "</textarea></label>" +
@@ -423,6 +457,11 @@
         hideMessage();
         var text = readFields(form, [{ name: "title", type: "i18n" }, { name: "description", type: "i18nText" }]);
         if (!text.title.en || !text.description.en) { showMessage(t("editor.needText"), true); return; }
+        var hostContact = { name: profile.name, whatsapp: profile.whatsapp };
+        if (profile.is_admin) {
+          hostContact = { name: form.elements.host_name.value.trim(), whatsapp: form.elements.host_whatsapp.value.replace(/[^\d]/g, "") };
+          if (!hostContact.name || !hostContact.whatsapp) { showMessage(t("editor.needHost"), true); return; }
+        }
         if (!form.reportValidity()) return;
         var f = form.elements;
         var data = {
@@ -435,7 +474,10 @@
           wifiMbps: numberOrNull(f.wifi.value),
           amenities: Array.prototype.map.call(form.querySelectorAll('[name="amenities"]:checked'), function (c) { return c.value; }),
           photos: photos, hue: l.hue,
-          host: { name: profile.name, whatsapp: profile.whatsapp }
+          host: hostContact,
+          // L'admin publie directement, et l'annonce reste dans son espace jusqu'à ce qu'elle la donne.
+          ownerId: profile.is_admin ? user.id : null,
+          status: profile.is_admin ? "published" : null
         };
         busy(form, true);
         DB.saveListing(data).then(function (saved) {
@@ -501,7 +543,9 @@
     function draw() {
       var tabs = [["pending", "admin.tabPending", pending().length], ["visit", "admin.tabToVisit", toVisit().length], ["listings", "admin.tabListings"], ["events", "admin.tabEvents"], ["ads", "admin.tabAds"]];
       root().innerHTML =
-        '<div class="space-head"><h1>' + esc(t("admin.title")) + '</h1><a class="btn btn-ghost" href="account.html">' + esc(t("nav.account")) + "</a></div>" +
+        '<div class="space-head"><h1>' + esc(t("admin.title")) + '</h1><div class="space-actions">' +
+          '<a class="btn btn-coral" href="account.html?new=1">' + esc(t("admin.addForHost")) + "</a>" +
+          '<a class="btn btn-ghost" href="account.html">' + esc(t("nav.account")) + "</a></div></div>" +
         '<div class="tabs" role="toolbar">' + tabs.map(function (tab) {
           return '<button type="button" data-tab="' + tab[0] + '" aria-pressed="' + (state.tab === tab[0]) + '">' + esc(t(tab[1])) +
             (tab[2] ? ' <span class="count">' + tab[2] + "</span>" : "") + "</button>";
@@ -561,6 +605,7 @@
               }).join("") + "</select>" +
               '<label class="check"><input type="checkbox" data-field="verified"' + (l.verified ? " checked" : "") + "> " + esc(t("admin.verified")) + "</label>" +
               '<label class="check"><input type="checkbox" data-field="featured"' + (l.featured ? " checked" : "") + "> " + esc(t("admin.featured")) + "</label>" +
+              '<button type="button" class="link-button" data-give-listing>' + esc(t("give.button")) + "</button>" +
               '<button type="button" class="link-button danger" data-delete-listing>' + esc(t("account.delete")) + "</button>" +
             "</div></div></article>";
       }).join("") + "</div>";
@@ -644,6 +689,11 @@
       }
       if (e.target.closest("[data-verify]") && card) {
         DB.updateListing(card.dataset.id, { verified: true }).then(function (saved) { replaceListing(saved); hideMessage(); draw(); }, showError);
+      }
+      if (e.target.closest("[data-give-listing]") && card) {
+        var l = state.listings.filter(function (x) { return x.id === card.dataset.id; })[0];
+        var giving = l && giveToHost(l);
+        if (giving) giving.then(function (saved) { replaceListing(saved); }, function () {});
       }
       if (e.target.closest("[data-delete-listing]") && card && window.confirm(t("account.confirmDelete"))) {
         DB.deleteListing(card.dataset.id).then(function () {

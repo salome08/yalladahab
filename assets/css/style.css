@@ -460,6 +460,7 @@ body.db-on .demo-note { display: none; }
 .import-box p { margin: 4px 0 10px; }
 .import-row { display: flex; gap: 8px; flex-wrap: wrap; }
 .import-row input { flex: 1 1 220px; }
+.host-fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
 
 /* ---------- Arabe (de droite à gauche) ---------- */
 :root[lang="ar"] { --font: "Cairo", "Plus Jakarta Sans", system-ui, -apple-system, "Segoe UI", Tahoma, sans-serif; }
