@@ -162,6 +162,10 @@
 
   function saveListing(l) {
     var row = listingToRow(l);
+    // Annonce créée par l'admin pour un hôte : elle est à elle et en ligne tout de suite
+    // (la base ignore ces deux champs pour les autres comptes).
+    if (!l.id && l.ownerId) row.owner_id = l.ownerId;
+    if (!l.id && l.status) row.status = l.status;
     return client().then(function (sb) {
       var q = l.id ? sb.from("listings").update(row).eq("id", l.id) : sb.from("listings").insert(row);
       return q.select().single();
@@ -190,6 +194,13 @@
       }
       return res.data;
     });
+  }
+
+  // Admin : donne une annonce au compte de l'hôte (fonction give_listing, supabase/give-listing.sql).
+  function giveListing(id, email) {
+    return client().then(function (sb) {
+      return sb.rpc("give_listing", { listing_id: id, host_email: email });
+    }).then(function (res) { return listingFromRow(data(res)); });
   }
 
   // fields : colonnes de la base, ex. { status: "published", verified: true }
@@ -247,7 +258,7 @@
     currentUser: currentUser, signIn: signIn, verifyCode: verifyCode, onSignedIn: onSignedIn, signOut: signOut,
     profile: profile, saveProfile: saveProfile,
     myListings: myListings, allListings: allListings, pendingCount: pendingCount, importAirbnb: importAirbnb, saveListing: saveListing,
-    updateListing: updateListing, deleteListing: deleteListing, uploadPhoto: uploadPhoto,
+    updateListing: updateListing, giveListing: giveListing, deleteListing: deleteListing, uploadPhoto: uploadPhoto,
     allEvents: allEvents, saveEvent: saveEvent, deleteEvent: deleteEvent,
     allAds: allAds, saveAd: saveAd, deleteAd: deleteAd
   };
