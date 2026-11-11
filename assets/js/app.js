@@ -11,7 +11,7 @@
   var LANGS = ["en", "fr", "ar"];
   var LANG_NAMES = { en: "EN", fr: "FR", ar: "عربي" };
   var RTL_LANGS = ["ar"];
-  var AREAS = ["lighthouse", "mashraba", "masbat", "assala", "eel-garden", "lagoon", "blue-hole-road"];
+  var AREAS = ["lighthouse", "mashraba", "masbat", "assala", "eel-garden", "lagoon", "blue-hole-road", "near-dahab"];
   var TYPES = ["studio", "apartment", "villa", "room"];
   var AMENITIES = ["wifi", "workspace", "seaView", "ac", "kitchen", "terrace", "garden", "washer",
     "rooftop", "pool", "parking", "gearStorage", "backupPower", "beachAccess", "hammock", "pets", "selfCheckin"];
@@ -367,7 +367,7 @@
           (l.wifiMbps ? '<p class="wifi-pill">📶 ' + esc(t("listing.wifiTested", { n: l.wifiMbps })) + "</p>" : "") +
           "<h2>" + esc(t("listing.amenities")) + "</h2>" +
           '<ul class="amenities">' + l.amenities.map(function (a) { return "<li>" + esc(t("amenity." + a)) + "</li>"; }).join("") + "</ul>" +
-          '<p><a href="https://maps.google.com/?q=' + encodeURIComponent(t("area." + l.area) + ", Dahab, Egypt") + '" target="_blank" rel="noopener">📍 ' + esc(t("listing.map")) + "</a></p>" +
+          '<p><a href="https://maps.google.com/?q=' + encodeURIComponent((l.area === "near-dahab" ? "" : t("area." + l.area) + ", ") + "Dahab, Egypt") + '" target="_blank" rel="noopener">📍 ' + esc(t("listing.map")) + "</a></p>" +
         "</div>" +
         '<aside class="contact-box">' +
           '<p class="price">' + priceHtml(l) + "</p>" +
