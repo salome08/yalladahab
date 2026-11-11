@@ -42,7 +42,9 @@ function page(template, l) {
   if (desc.length > 160) desc = desc.slice(0, 157).replace(/\s+\S*$/, "") + "…";
   desc = `${summary(l)}. ${desc}`;
   const url = `${SITE}/${OUT}/${l.id}`;
-  const image = (l.photos && l.photos[0]) || `${SITE}/assets/img/og-image.png`;
+  // Photo de l'annonce d'abord, puis l'image du site en secours (Facebook prend la première qu'il arrive à lire).
+  const photo = l.photos && l.photos[0];
+  const fallback = `${SITE}/assets/img/share.jpg`;
   const meta = [
     `<title>${esc(title)} · Yalla Dahab</title>`,
     `<meta name="description" content="${esc(desc)}">`,
@@ -52,9 +54,18 @@ function page(template, l) {
     `<meta property="og:type" content="website">`,
     `<meta property="og:url" content="${esc(url)}">`,
     `<meta property="og:site_name" content="Yalla Dahab">`,
-    `<meta property="og:image" content="${esc(image)}">`,
-    `<meta property="og:image:alt" content="${esc(text(l.title))}">`,
+    ...(photo ? [
+      `<meta property="og:image" content="${esc(photo)}">`,
+      `<meta property="og:image:alt" content="${esc(text(l.title))}">`,
+    ] : []),
+    `<meta property="og:image" content="${fallback}">`,
+    `<meta property="og:image:secure_url" content="${fallback}">`,
+    `<meta property="og:image:type" content="image/jpeg">`,
+    `<meta property="og:image:width" content="1200">`,
+    `<meta property="og:image:height" content="630">`,
+    `<meta property="og:image:alt" content="Yalla Dahab: stay with Dahab locals">`,
     `<meta name="twitter:card" content="summary_large_image">`,
+    `<meta name="twitter:image" content="${esc(photo || fallback)}">`,
   ].join("\n  ");
   return template
     // Les liens du site (styles, scripts, menu) partent de la racine.
