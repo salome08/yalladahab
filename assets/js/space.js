@@ -264,7 +264,7 @@
         var toggle = l.status === "published" ? ["paused", "account.pause"] : l.status === "paused" ? ["published", "account.resume"] : null;
         return '<article class="space-row" data-id="' + esc(l.id) + '">' +
           '<div class="space-thumb" style="--h:' + (l.hue || 190) + '">' + cover + "</div>" +
-          '<div class="space-row-body"><h3>' + esc(loc(l.title)) + "</h3>" + statusBadge(l.status) +
+          '<div class="space-row-body"><h3>' + YD.locHtml(l.title) + "</h3>" + statusBadge(l.status) +
             '<div class="space-row-actions">' +
               '<button type="button" class="link-button" data-action="edit">' + esc(t("account.edit")) + "</button>" +
               (toggle ? '<button type="button" class="link-button" data-action="status" data-status="' + toggle[0] + '">' + esc(t(toggle[1])) + "</button>" : "") +
@@ -304,7 +304,7 @@
       };
       var photos = l.photos.slice();
       root().innerHTML =
-        '<a class="back" href="account.html">← ' + esc(t("account.myListings")) + "</a>" +
+        '<a class="back" href="account.html"><span class="arrow">←</span> ' + esc(t("account.myListings")) + "</a>" +
         '<form class="form-card" id="listing-form" novalidate>' +
           '<h1 class="full">' + esc(t(existing ? "editor.titleEdit" : "editor.titleNew")) + "</h1>" +
           (existing ? '<p class="full">' + statusBadge(existing.status) + "</p>" : "") +
@@ -314,8 +314,8 @@
             '<button type="button" class="btn btn-coral" id="import-go">' + esc(t("import.button")) + "</button></div>" +
             '<span class="small muted" id="import-status"></span></div>') +
           // Anglais demandé (compris par tous les voyageurs) ; le français est un plus, replié par défaut.
-          '<label class="full">' + esc(t("editor.title")) + '<input name="title_en" required value="' + esc(l.title.en || "") + '" placeholder="' + esc(t("editor.titlePlaceholder")) + '"></label>' +
-          '<label class="full">' + esc(t("editor.desc")) + '<textarea name="description_en" required>' + esc(l.description.en || "") + "</textarea></label>" +
+          '<label class="full">' + esc(t("editor.title")) + '<input name="title_en" dir="auto" required value="' + esc(l.title.en || "") + '" placeholder="' + esc(t("editor.titlePlaceholder")) + '"></label>' +
+          '<label class="full">' + esc(t("editor.desc")) + '<textarea name="description_en" dir="auto" required>' + esc(l.description.en || "") + "</textarea></label>" +
           '<p class="full small muted">' + esc(t("editor.langHelp")) + "</p>" +
           '<details class="full lang-extra"' + (l.title.fr || l.description.fr ? " open" : "") + "><summary>" + esc(t("editor.addFrench")) + "</summary>" +
             '<div class="lang-extra-body">' +
@@ -522,9 +522,9 @@
       panel().innerHTML = list.map(function (l) {
         return '<article class="card review-card" data-id="' + esc(l.id) + '"><div class="card-body">' +
           '<p class="card-meta">' + esc(t("area." + l.area)) + " · " + esc(t("type." + l.type)) + " · " + l.guests + " " + esc(t("card.guests")) + "</p>" +
-          "<h3>" + esc(loc(l.title)) + "</h3>" +
+          "<h3>" + YD.locHtml(l.title) + "</h3>" +
           (l.createdAt ? '<p class="small muted review-meta">' + esc(t("admin.submittedOn", { date: YD.formatDate(l.createdAt.slice(0, 10), { day: "numeric", month: "long", year: "numeric" }) })) + "</p>" : "") +
-          "<p>" + esc(loc(l.description)) + "</p>" +
+          "<p>" + YD.locHtml(l.description) + "</p>" +
           '<p class="price">' + (l.pricePerNight ? YD.money(l.pricePerNight, l.currency) + " / " + esc(t("card.night")) : esc(t("card.onRequest"))) +
             (l.pricePerMonth ? " · " + YD.money(l.pricePerMonth, l.currency) + " / " + esc(t("card.month")) : "") + "</p>" +
           '<div class="thumbs">' + l.photos.map(function (src) { return '<img src="' + esc(src) + '" alt="">'; }).join("") + "</div>" +
@@ -541,7 +541,7 @@
       panel().innerHTML = '<p class="muted">' + esc(t("admin.toVisitHelp")) + '</p><div class="space-list">' + list.map(function (l) {
         return '<article class="space-row" data-id="' + esc(l.id) + '">' +
           '<div class="space-thumb" style="--h:' + (l.hue || 190) + '">' + (l.photos[0] ? '<img src="' + esc(l.photos[0]) + '" alt="" onerror="this.remove()">' : "") + "</div>" +
-          '<div class="space-row-body"><h3><a href="listing.html?id=' + encodeURIComponent(l.id) + '">' + esc(loc(l.title)) + "</a></h3>" +
+          '<div class="space-row-body"><h3><a href="listing.html?id=' + encodeURIComponent(l.id) + '">' + YD.locHtml(l.title) + "</a></h3>" +
             '<p class="small muted">' + esc(t("area." + l.area)) + " · " + esc(l.host.name) + ' · <a href="https://wa.me/' + esc(l.host.whatsapp) + '" target="_blank" rel="noopener">WhatsApp</a></p>' +
             '<div class="space-row-actions"><button type="button" class="btn btn-small" data-verify>✓ ' + esc(t("admin.markVerified")) + "</button></div>" +
           "</div></article>";
@@ -553,7 +553,7 @@
       panel().innerHTML = '<div class="space-list">' + state.listings.map(function (l) {
         return '<article class="space-row" data-id="' + esc(l.id) + '">' +
           '<div class="space-thumb" style="--h:' + (l.hue || 190) + '">' + (l.photos[0] ? '<img src="' + esc(l.photos[0]) + '" alt="" onerror="this.remove()">' : "") + "</div>" +
-          '<div class="space-row-body"><h3><a href="listing.html?id=' + encodeURIComponent(l.id) + '">' + esc(loc(l.title)) + "</a></h3>" +
+          '<div class="space-row-body"><h3><a href="listing.html?id=' + encodeURIComponent(l.id) + '">' + YD.locHtml(l.title) + "</a></h3>" +
             '<p class="small muted">' + esc(l.host.name) + ' · <a href="https://wa.me/' + esc(l.host.whatsapp) + '" target="_blank" rel="noopener">WhatsApp</a></p>' +
             '<div class="space-row-actions">' +
               '<select data-field="status" aria-label="' + esc(t("admin.status")) + '">' + ["pending", "published", "paused", "rejected"].map(function (s) {
@@ -567,7 +567,7 @@
     }
 
     function drawEvents(editing) { drawCrud("events", EVENT_FIELDS, "admin.newEvent", editing, function (e) {
-      return '<strong>' + esc(YD.formatDate(e.date, { day: "numeric", month: "short", year: "numeric" })) + " " + esc(e.time) + "</strong> · " + esc(loc(e.title)) +
+      return '<strong>' + esc(YD.formatDate(e.date, { day: "numeric", month: "short", year: "numeric" })) + " " + esc(e.time) + "</strong> · " + YD.locHtml(e.title) +
         (e.featured ? ' <span class="badge badge-featured">★</span>' : "");
     }); }
 

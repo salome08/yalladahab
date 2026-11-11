@@ -8,7 +8,9 @@
   var LISTINGS = [];
   var EVENTS = [];
   var ADS = [];
-  var LANGS = ["en", "fr"];
+  var LANGS = ["en", "fr", "ar"];
+  var LANG_NAMES = { en: "EN", fr: "FR", ar: "عربي" };
+  var RTL_LANGS = ["ar"];
   var AREAS = ["lighthouse", "mashraba", "masbat", "assala", "eel-garden", "lagoon", "blue-hole-road"];
   var TYPES = ["studio", "apartment", "villa", "room"];
   var AMENITIES = ["wifi", "workspace", "seaView", "ac", "kitchen", "terrace", "garden", "washer",
@@ -32,6 +34,17 @@
   }
 
   var lang = detectLang();
+  // Appliqué tout de suite (avant l'affichage) pour éviter un "saut" de mise en page.
+  document.documentElement.lang = lang;
+  if (RTL_LANGS.indexOf(lang) !== -1) {
+    document.documentElement.dir = "rtl";
+    var arFont = document.createElement("link");
+    arFont.rel = "stylesheet";
+    arFont.href = "https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&display=swap";
+    document.head.appendChild(arFont);
+  }
+  // Chiffres occidentaux (123) même en arabe : c'est ce que les Égyptiens utilisent pour les prix et les numéros.
+  var LOCALES = { en: "en-GB", fr: "fr-FR", ar: "ar-EG-u-nu-latn" };
 
   function t(key, vars) {
     var str = (I18N[lang] && I18N[lang][key]) || I18N.en[key] || key;
@@ -41,9 +54,13 @@
     return str;
   }
   function loc(obj) { return obj ? (obj[lang] || obj.en || obj.fr || "") : ""; }
+  // Texte écrit par un hôte (souvent en anglais) : isolé pour qu'il s'affiche bien dans une page en arabe.
+  function locHtml(obj) { return "<bdi>" + esc(loc(obj)) + "</bdi>"; }
+  function bidi(s) { return "<bdi>" + esc(s) + "</bdi>"; }
 
   function applyStaticTexts() {
     document.documentElement.lang = lang;
+    document.documentElement.dir = RTL_LANGS.indexOf(lang) !== -1 ? "rtl" : "ltr";
     document.querySelectorAll("[data-i18n]").forEach(function (el) { el.textContent = t(el.dataset.i18n); });
     document.querySelectorAll("[data-i18n-placeholder]").forEach(function (el) { el.placeholder = t(el.dataset.i18nPlaceholder); });
   }
@@ -57,6 +74,7 @@
   }
   function money(n, currency) {
     var amount = Number(n).toLocaleString(lang === "fr" ? "fr-FR" : "en-US");
+    if (lang === "ar") return currency === "USD" ? amount + " دولار" : amount + " جنيه";
     return currency === "USD" ? (lang === "fr" ? amount + " $" : "$" + amount) : amount + " EGP";
   }
   function inEgp(n, currency) { return n && currency === "USD" ? n * CONFIG.usdToEgp : n; }
@@ -74,7 +92,7 @@
   }
   function formatDate(iso, opts) {
     var d = new Date(iso + "T12:00:00");
-    return d.toLocaleDateString(lang === "fr" ? "fr-FR" : "en-GB", opts || { weekday: "short", day: "numeric", month: "short" });
+    return d.toLocaleDateString(LOCALES[lang] || "en-GB", opts || { weekday: "short", day: "numeric", month: "short" });
   }
   function optionList(values, prefix, anyLabel) {
     return '<option value="">' + esc(anyLabel) + "</option>" + values.map(function (v) {
@@ -162,7 +180,7 @@
             }).join("") +
             '<a class="btn btn-small" href="host.html"' + (page === "host" ? ' aria-current="page"' : "") + ">" + esc(t("nav.host")) + "</a>" +
             '<select class="lang-select" aria-label="' + esc(t("lang.label")) + '">' +
-              LANGS.map(function (l) { return '<option value="' + l + '"' + (l === lang ? " selected" : "") + ">" + l.toUpperCase() + "</option>"; }).join("") +
+              LANGS.map(function (l) { return '<option value="' + l + '"' + (l === lang ? " selected" : "") + ">" + LANG_NAMES[l] + "</option>"; }).join("") +
             "</select>" +
           "</nav>" +
           '<div class="header-tools">' +
@@ -205,13 +223,13 @@
       return '<a class="banner" style="--h:' + a.hue + '" href="' + esc(a.link) + '"' +
         (external ? ' target="_blank" rel="noopener sponsored"' : "") + ">" +
         '<span class="banner-label">' + esc(t("ad.label")) + "</span>" +
-        '<span class="banner-body"><strong>' + esc(loc(a.title)) + "</strong><span>" + esc(loc(a.text)) + "</span></span>" +
-        '<span class="banner-cta">' + esc(loc(a.cta)) + " →</span></a>";
+        '<span class="banner-body"><strong>' + locHtml(a.title) + "</strong><span>" + locHtml(a.text) + "</span></span>" +
+        '<span class="banner-cta">' + locHtml(a.cta) + ' <span class="arrow">→</span></span></a>';
     }).join("");
     if (ads.length < CONFIG.maxBannersPerPage) {
       html += '<a class="banner banner-empty" href="advertise.html">' +
         '<span class="banner-body"><strong>' + esc(t("ad.yours")) + "</strong><span>" + esc(t("ad.yoursText")) + "</span></span>" +
-        '<span class="banner-cta">' + esc(t("ad.yoursCta")) + " →</span></a>";
+        '<span class="banner-cta">' + esc(t("ad.yoursCta")) + ' <span class="arrow">→</span></span></a>';
     }
     el.innerHTML = html;
   }
@@ -225,7 +243,7 @@
       '<div class="card-body">' +
         '<p class="card-meta">' + esc(t("area." + l.area)) + " · " + l.guests + " " + esc(t("card.guests")) +
           (l.wifiMbps ? " · " + l.wifiMbps + " " + esc(t("card.mbps")) : "") + "</p>" +
-        "<h3>" + esc(loc(l.title)) + "</h3>" +
+        "<h3>" + locHtml(l.title) + "</h3>" +
         '<p class="price">' + priceHtml(l) + "</p>" +
       "</div></a>";
   }
@@ -238,10 +256,10 @@
       '<div class="card-body">' +
         (e.featured ? '<span class="badge badge-featured">★ ' + esc(t("events.featured")) + "</span> " : "") +
         '<span class="badge">' + esc(t("cat." + e.category)) + "</span>" +
-        "<h3>" + esc(loc(e.title)) + "</h3>" +
-        '<p class="card-meta">' + esc(formatDate(e.date, { weekday: "long" })) + " · " + esc(e.time) + " · " + esc(e.place) + "</p>" +
-        "<p>" + esc(loc(e.description)) + "</p>" +
-        '<p class="price"><strong>' + esc(e.price) + "</strong></p>" +
+        "<h3>" + locHtml(e.title) + "</h3>" +
+        '<p class="card-meta">' + esc(formatDate(e.date, { weekday: "long" })) + " · " + esc(e.time) + " · " + bidi(e.place) + "</p>" +
+        "<p>" + locHtml(e.description) + "</p>" +
+        '<p class="price"><strong>' + bidi(e.price) + "</strong></p>" +
       "</div></article>";
   }
 
@@ -335,7 +353,7 @@
     var pageUrl = "https://yalladahab.com/stay/" + encodeURIComponent(l.id);
 
     root.innerHTML =
-      '<a class="back" href="listings.html">← ' + esc(t("listing.back")) + "</a>" +
+      '<a class="back" href="listings.html"><span class="arrow">←</span> ' + esc(t("listing.back")) + "</a>" +
       '<div class="gallery">' + photo(l.hue, t("type." + l.type), photoOf(l, 0)) + photo(l.hue + 25, "", photoOf(l, 1)) + photo(l.hue - 25, "", photoOf(l, 2)) + "</div>" +
       (l.photos && l.photos.length > 3 ? '<div class="more-photos">' + l.photos.slice(3).map(function (src) {
         return '<img src="' + esc(src) + '" alt="" loading="lazy" onerror="this.remove()">';
@@ -343,9 +361,9 @@
       '<div class="listing-layout">' +
         "<div>" +
           '<p class="card-meta">' + esc(t("area." + l.area)) + " · " + esc(t("type." + l.type)) + " · " + l.guests + " " + esc(t("card.guests")) + "</p>" +
-          "<h1>" + esc(title) + (l.verified ? ' <span class="badge badge-verified">✓ ' + esc(t("card.verified")) + "</span>" : "") + "</h1>" +
+          "<h1>" + bidi(title) + (l.verified ? ' <span class="badge badge-verified">✓ ' + esc(t("card.verified")) + "</span>" : "") + "</h1>" +
           '<p class="muted">' + esc(t("listing.host", { name: l.host.name })) + "</p>" +
-          '<p class="lead">' + esc(loc(l.description)) + "</p>" +
+          '<p class="lead">' + locHtml(l.description) + "</p>" +
           (l.wifiMbps ? '<p class="wifi-pill">📶 ' + esc(t("listing.wifiTested", { n: l.wifiMbps })) + "</p>" : "") +
           "<h2>" + esc(t("listing.amenities")) + "</h2>" +
           '<ul class="amenities">' + l.amenities.map(function (a) { return "<li>" + esc(t("amenity." + a)) + "</li>"; }).join("") + "</ul>" +
@@ -477,7 +495,7 @@
   var PRIVATE_PAGES = { login: true, account: true, admin: true };
 
   window.YD = {
-    t: t, loc: loc, esc: esc, money: money, lang: function () { return lang; },
+    t: t, loc: loc, locHtml: locHtml, esc: esc, money: money, lang: function () { return lang; },
     formatDate: formatDate, optionList: optionList, applyStaticTexts: applyStaticTexts,
     AREAS: AREAS, TYPES: TYPES, AMENITIES: AMENITIES,
     registerPage: function (name, init) { PAGES[name] = init; PRIVATE_PAGES[name] = true; }
