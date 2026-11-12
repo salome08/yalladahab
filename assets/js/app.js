@@ -351,12 +351,19 @@
     document.title = title + " · Yalla Dahab";
     // Lien partagé : la page stay/<id> a sa photo et son titre en aperçu sur WhatsApp et Facebook.
     var pageUrl = "https://yalladahab.com/stay/" + encodeURIComponent(l.id);
+    var photos = l.photos || [];
+    // Une photo de la fiche devient cliquable (plein écran) seulement si elle existe vraiment.
+    function zoomable(html, i) {
+      return photos[i] ? html.replace('<div class="photo"', '<div class="photo zoomable" data-photo="' + i + '" tabindex="0" role="button" aria-label="' + esc(t("lightbox.open")) + '"') : html;
+    }
 
     root.innerHTML =
       '<a class="back" href="listings.html"><span class="arrow">←</span> ' + esc(t("listing.back")) + "</a>" +
-      '<div class="gallery">' + photo(l.hue, t("type." + l.type), photoOf(l, 0)) + photo(l.hue + 25, "", photoOf(l, 1)) + photo(l.hue - 25, "", photoOf(l, 2)) + "</div>" +
-      (l.photos && l.photos.length > 3 ? '<div class="more-photos">' + l.photos.slice(3).map(function (src) {
-        return '<img src="' + esc(src) + '" alt="" loading="lazy" onerror="this.remove()">';
+      '<div class="gallery">' + zoomable(photo(l.hue, t("type." + l.type), photoOf(l, 0)), 0) + zoomable(photo(l.hue + 25, "", photoOf(l, 1)), 1) + zoomable(photo(l.hue - 25, "", photoOf(l, 2)), 2) +
+        (photos.length > 1 ? '<button type="button" class="gallery-all" data-photo="0"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z" fill="currentColor"/></svg> ' + esc(t("listing.allPhotos", { n: photos.length })) + "</button>" : "") +
+      "</div>" +
+      (photos.length > 3 ? '<div class="more-photos">' + photos.slice(3).map(function (src, i) {
+        return '<img src="' + esc(src) + '" alt="" loading="lazy" onerror="this.remove()" data-photo="' + (i + 3) + '" tabindex="0" role="button" aria-label="' + esc(t("lightbox.open")) + '">';
       }).join("") + "</div>" : "") +
       '<div class="listing-layout">' +
         "<div>" +
@@ -401,12 +408,89 @@
     from.min = today; to.min = today;
     updateWa();
 
+    if (photos.length) {
+      root.addEventListener("click", function (e) {
+        var el = e.target.closest("[data-photo]");
+        if (el) openLightbox(photos, Number(el.dataset.photo), el);
+      });
+      root.addEventListener("keydown", function (e) {
+        var el = e.target.closest && e.target.closest("[data-photo]");
+        if (el && el.tagName !== "BUTTON" && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); openLightbox(photos, Number(el.dataset.photo), el); }
+      });
+    }
+
     document.getElementById("copy-link").addEventListener("click", function (e) {
       var btn = e.target;
       var done = function () { btn.textContent = t("listing.copied"); };
       if (navigator.clipboard) navigator.clipboard.writeText(pageUrl).then(done, function () { window.prompt("", pageUrl); });
       else window.prompt("", pageUrl);
     });
+  }
+
+  // Photos en plein écran : flèches, clavier (← → Échap), et glisser du doigt sur téléphone.
+  // En arabe (de droite à gauche) le sens des flèches et du glissement est inversé.
+  function openLightbox(photos, start, opener) {
+    var i = start;
+    var rtl = document.documentElement.dir === "rtl";
+    var box = document.createElement("div");
+    box.className = "lightbox";
+    box.setAttribute("role", "dialog");
+    box.setAttribute("aria-modal", "true");
+    box.setAttribute("aria-label", t("lightbox.title"));
+    var many = photos.length > 1;
+    box.innerHTML =
+      '<button type="button" class="lb-close" aria-label="' + esc(t("lightbox.close")) + '"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>' +
+      (many ? '<p class="lb-count" aria-live="polite"></p>' : "") +
+      '<figure class="lb-stage"><img alt=""></figure>' +
+      (many ? '<button type="button" class="lb-nav lb-prev" aria-label="' + esc(t("lightbox.prev")) + '"><svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>' +
+              '<button type="button" class="lb-nav lb-next" aria-label="' + esc(t("lightbox.next")) + '"><svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true"><path d="M9 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>' : "");
+    var img = box.querySelector("img");
+    var count = box.querySelector(".lb-count");
+    function show() {
+      img.src = photos[i];
+      if (count) count.textContent = t("lightbox.count", { n: i + 1, total: photos.length });
+      // Précharge la photo suivante pour un défilement fluide.
+      if (many) new Image().src = photos[(i + 1) % photos.length];
+    }
+    function go(step) { i = (i + step + photos.length) % photos.length; show(); }
+    function close() {
+      document.removeEventListener("keydown", onKey);
+      document.body.classList.remove("lb-open");
+      box.remove();
+      if (opener && opener.focus) opener.focus();
+    }
+    function onKey(e) {
+      if (e.key === "Escape") close();
+      else if (many && e.key === "ArrowRight") go(rtl ? -1 : 1);
+      else if (many && e.key === "ArrowLeft") go(rtl ? 1 : -1);
+      else if (e.key === "Tab") {
+        var f = box.querySelectorAll("button");
+        var first = f[0], last = f[f.length - 1];
+        if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+        else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+      }
+    }
+    box.querySelector(".lb-close").addEventListener("click", close);
+    if (many) {
+      box.querySelector(".lb-prev").addEventListener("click", function () { go(-1); });
+      box.querySelector(".lb-next").addEventListener("click", function () { go(1); });
+    }
+    // Un clic sur le fond noir (pas sur la photo ni les boutons) ferme.
+    box.addEventListener("click", function (e) { if (e.target === box || e.target.classList.contains("lb-stage")) close(); });
+    var x0 = null, y0 = 0;
+    box.addEventListener("touchstart", function (e) { if (e.touches.length === 1) { x0 = e.touches[0].clientX; y0 = e.touches[0].clientY; } else x0 = null; }, { passive: true });
+    box.addEventListener("touchend", function (e) {
+      if (x0 === null) return;
+      var dx = e.changedTouches[0].clientX - x0, dy = e.changedTouches[0].clientY - y0;
+      x0 = null;
+      if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy)) { if (many) go((dx < 0) !== rtl ? 1 : -1); }
+      else if (dy > 90 && Math.abs(dy) > Math.abs(dx)) close();
+    });
+    document.addEventListener("keydown", onKey);
+    document.body.classList.add("lb-open");
+    document.body.appendChild(box);
+    show();
+    box.querySelector(".lb-close").focus();
   }
 
   function initEvents() {
