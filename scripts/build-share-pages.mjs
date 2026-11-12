@@ -37,7 +37,7 @@ function summary(l) {
 }
 
 function page(template, l) {
-  const title = `${text(l.title)} · ${l.area === "near-dahab" ? EN["area.near-dahab"] : (EN["area." + l.area] || l.area) + ", Dahab"}`;
+  const title = `${text(l.title)} · ${(l.area === "near-dahab" || l.area === "other-dahab") ? EN["area." + l.area] : (EN["area." + l.area] || l.area) + ", Dahab"}`;
   let desc = text(l.description).replace(/\s+/g, " ").trim();
   if (desc.length > 160) desc = desc.slice(0, 157).replace(/\s+\S*$/, "") + "…";
   desc = `${summary(l)}. ${desc}`;
