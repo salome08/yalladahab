@@ -49,7 +49,7 @@ function page(template, l) {
   const url = `${SITE}/${OUT}/${l.id}`;
   // Photo de l'annonce d'abord, puis l'image du site en secours (Facebook prend la première qu'il arrive à lire).
   const photo = l.photos && l.photos[0];
-  const fallback = `${SITE}/assets/img/share.jpg`;
+  const fallback = `${SITE}/assets/img/share-sauge.jpg`;
   const meta = [
     `<title>${esc(title)} · Yalla Dahab</title>`,
     `<meta name="description" content="${esc(desc)}">`,
