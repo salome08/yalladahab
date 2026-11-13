@@ -565,3 +565,8 @@ body.db-on .demo-note { display: none; }
 .wifi-field { display: block; margin-top: 14px; max-width: 320px; }
 @media (max-width: 720px) { .field-row-prices { grid-template-columns: 1fr 1fr; } }
 @media (max-width: 560px) { .field-row-3 { grid-template-columns: 1fr 1fr 1fr; gap: 10px; } }
+
+/* Équipements par catégorie */
+.amenity-group { margin-top: 14px; }
+.amenity-group h3 { font-size: .95rem; margin: 0 0 8px; color: var(--muted); font-weight: 700; }
+.amenity-group .checks { margin-top: 0; }
