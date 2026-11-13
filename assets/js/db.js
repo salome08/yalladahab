@@ -162,6 +162,12 @@
     }).then(function (res) { return data(res).map(listingFromRow); });
   }
 
+  function getListing(id) {
+    return client().then(function (sb) {
+      return sb.from("listings").select("*").eq("id", id).single();
+    }).then(function (res) { return listingFromRow(data(res)); });
+  }
+
   function saveListing(l) {
     var row = listingToRow(l);
     // Annonce créée par l'admin pour un hôte : elle est à elle et en ligne tout de suite
@@ -259,7 +265,7 @@
     load: load,
     currentUser: currentUser, signIn: signIn, verifyCode: verifyCode, onSignedIn: onSignedIn, signOut: signOut,
     profile: profile, saveProfile: saveProfile,
-    myListings: myListings, allListings: allListings, pendingCount: pendingCount, importAirbnb: importAirbnb, saveListing: saveListing,
+    myListings: myListings, allListings: allListings, getListing: getListing, pendingCount: pendingCount, importAirbnb: importAirbnb, saveListing: saveListing,
     updateListing: updateListing, giveListing: giveListing, deleteListing: deleteListing, uploadPhoto: uploadPhoto,
     allEvents: allEvents, saveEvent: saveEvent, deleteEvent: deleteEvent,
     allAds: allAds, saveAd: saveAd, deleteAd: deleteAd
