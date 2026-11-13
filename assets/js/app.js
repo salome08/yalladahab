@@ -259,6 +259,32 @@
     }
   }
 
+  // ---------- Statistiques de visites (supabase/stats.sql) ----------
+  // Anonyme : pas de cookie, le navigateur garde seulement la date du jour (« yd-seen »)
+  // pour savoir si c'est la première page de la journée. Rien n'est compté pour l'admin
+  // (marqueur « yd-no-stats » posé quand elle ouvre son espace) ni pour les robots.
+
+  function statsOff() { return storageGet("yd-no-stats") === "1" || navigator.webdriver === true; }
+
+  // Site d'où vient le visiteur : « facebook.com », « google.com »… vide s'il vient du site lui-même.
+  function referrerSource() {
+    try {
+      var host = new URL(document.referrer).hostname.toLowerCase().replace(/^(www|m|l|lm|mobile)\./, "");
+      return host === window.location.hostname.replace(/^www\./, "") ? "" : host.slice(0, 100);
+    } catch (e) { return ""; }
+  }
+
+  function track(rows) { if (!statsOff()) DB.track(rows); }
+
+  function trackView(page, listingId) {
+    if (statsOff()) return;
+    var d = new Date();
+    var today = d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDate();
+    var first = storageGet("yd-seen") !== today;
+    if (first) storageSet("yd-seen", today);
+    track([{ kind: "view", page: page, listing_id: listingId || null, first_today: first, source: first ? referrerSource() : null }]);
+  }
+
   // ---------- Bannières ----------
 
   function renderBanners(slot) {
@@ -267,7 +293,7 @@
     var ads = ADS.filter(function (a) { return a.active && a.slot === slot; }).slice(0, CONFIG.maxBannersPerPage);
     var html = ads.map(function (a) {
       var external = /^https?:/.test(a.link);
-      return '<a class="banner" style="--h:' + a.hue + '" href="' + esc(a.link) + '"' +
+      return '<a class="banner" data-ad="' + esc(a.id) + '" style="--h:' + a.hue + '" href="' + esc(a.link) + '"' +
         (external ? ' target="_blank" rel="noopener sponsored"' : "") + ">" +
         '<span class="banner-label">' + esc(t("ad.label")) + "</span>" +
         '<span class="banner-body"><strong>' + locHtml(a.title) + "</strong><span>" + locHtml(a.text) + "</span></span>" +
@@ -279,6 +305,12 @@
         '<span class="banner-cta">' + esc(t("ad.yoursCta")) + ' <span class="arrow">→</span></span></a>';
     }
     el.innerHTML = html;
+    // Affichages et clics de chaque bannière : les chiffres à montrer aux annonceurs.
+    if (ads.length) track(ads.map(function (a) { return { kind: "ad_view", ad_id: a.id, page: document.body.dataset.page }; }));
+    el.addEventListener("click", function (e) {
+      var b = e.target.closest("[data-ad]");
+      if (b) track([{ kind: "ad_click", ad_id: b.dataset.ad, page: document.body.dataset.page }]);
+    });
   }
 
   // ---------- Cartes ----------
@@ -418,6 +450,7 @@
       return;
     }
     var title = listingText(l.title);
+    viewedListing = l.id;
     document.title = title + " · Yalla Dahab";
     // Lien partagé : la page stay/<id> a sa photo et son titre en aperçu sur WhatsApp et Facebook.
     var pageUrl = "https://yalladahab.com/stay/" + encodeURIComponent(l.id);
@@ -480,6 +513,7 @@
     }
     from.addEventListener("change", function () { to.min = from.value; updateWa(); });
     to.addEventListener("change", updateWa);
+    wa.addEventListener("click", function () { track([{ kind: "whatsapp", page: "listing", listing_id: l.id }]); });
     var today = new Date().toISOString().slice(0, 10);
     from.min = today; to.min = today;
     updateWa();
@@ -693,6 +727,8 @@
     });
   }
 
+  var viewedListing = null; // annonce affichée par initListing (pour les statistiques)
+
   var PAGES = { home: initHome, listings: initListings, listing: initListing, events: initEvents, host: initHost, advertise: initAdvertise };
   // Pages qui n'affichent pas le catalogue public (espace hôtes, admin) : pas besoin de le charger.
   var PRIVATE_PAGES = { login: true, account: true, admin: true };
@@ -701,6 +737,7 @@
     t: t, loc: loc, locHtml: locHtml, listingText: listingText, listingTextHtml: listingTextHtml, esc: esc, money: money, lang: function () { return lang; },
     formatDate: formatDate, photoStrip: photoStrip, refreshStrips: refreshStrips, openLightbox: openLightbox, bedsText: bedsText, priceHtml: priceHtml, guestPricesHtml: guestPricesHtml, optionList: optionList, applyStaticTexts: applyStaticTexts,
     AREAS: AREAS, TYPES: TYPES, AMENITIES: AMENITIES, AMENITY_GROUPS: AMENITY_GROUPS,
+    setNoStats: function (off) { storageSet("yd-no-stats", off ? "1" : "0"); },
     registerPage: function (name, init) { PAGES[name] = init; PRIVATE_PAGES[name] = true; }
   };
 
@@ -718,6 +755,6 @@
       ADS = data.ads;
     }, function (err) {
       console.error("Yalla Dahab: data could not be loaded", err);
-    }).then(init);
+    }).then(init).then(function () { trackView(page, viewedListing); });
   });
 })();

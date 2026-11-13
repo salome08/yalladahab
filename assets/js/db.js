@@ -260,6 +260,42 @@
     return client().then(function (sb) { return sb.from("ads").delete().eq("id", id); }).then(data);
   }
 
+  // ---------- Statistiques (supabase/stats.sql) ----------
+
+  // Envoie des événements anonymes (pages vues, clics). keepalive : l'envoi continue
+  // même si le visiteur quitte la page juste après le clic. Une erreur ne gêne jamais la visite.
+  function track(rows) {
+    if (!enabled || !rows.length || !window.fetch) return;
+    try {
+      fetch(CONFIG.supabaseUrl + "/rest/v1/site_stats", {
+        method: "POST",
+        keepalive: true,
+        headers: {
+          apikey: CONFIG.supabaseAnonKey,
+          Authorization: "Bearer " + CONFIG.supabaseAnonKey,
+          "Content-Type": "application/json",
+          Prefer: "return=minimal"
+        },
+        body: JSON.stringify(rows)
+      }).catch(function () {});
+    } catch (e) {}
+  }
+
+  function rpc(name, args) {
+    return client().then(function (sb) { return sb.rpc(name, args); }).then(data);
+  }
+
+  // Tous les chiffres de la page Statistiques de l'admin, sur les `days` derniers jours.
+  function stats(days) {
+    return Promise.all([
+      rpc("stats_daily", { days: days }), rpc("stats_listings", { days: days }),
+      rpc("stats_ads", { days: days }), rpc("stats_sources", { days: days }), rpc("stats_since")
+    ]).then(function (r) { return { daily: r[0] || [], listings: r[1] || [], ads: r[2] || [], sources: r[3] || [], since: r[4] }; });
+  }
+
+  // Vues et clics WhatsApp des annonces de l'hôte connecté.
+  function listingStats(days) { return rpc("stats_listings", { days: days }); }
+
   window.YD_DB = {
     enabled: enabled,
     load: load,
@@ -268,6 +304,7 @@
     myListings: myListings, allListings: allListings, getListing: getListing, pendingCount: pendingCount, importAirbnb: importAirbnb, saveListing: saveListing,
     updateListing: updateListing, giveListing: giveListing, deleteListing: deleteListing, uploadPhoto: uploadPhoto,
     allEvents: allEvents, saveEvent: saveEvent, deleteEvent: deleteEvent,
-    allAds: allAds, saveAd: saveAd, deleteAd: deleteAd
+    allAds: allAds, saveAd: saveAd, deleteAd: deleteAd,
+    track: track, stats: stats, listingStats: listingStats
   };
 })();

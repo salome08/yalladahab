@@ -223,8 +223,24 @@
       if (editId && profile.is_admin) {
         DB.getListing(editId).then(function (l) { drawEditor(l, true); }, showError);
       }
-      if (profile.is_admin) showAdminAlert();
+      if (profile.is_admin) { showAdminAlert(); YD.setNoStats(true); }
+      loadListingStats();
     }).catch(showError);
+
+    // Vues et contacts WhatsApp de chaque annonce, sur les 30 derniers jours.
+    var listingStats = null;
+    function loadListingStats() {
+      DB.listingStats(30).then(function (rows) {
+        listingStats = {};
+        (rows || []).forEach(function (r) { listingStats[r.listing_id] = r; });
+        if (document.getElementById("my-listings")) drawList();
+      }, function () { /* statistiques pas encore installées : rien à afficher */ });
+    }
+    function statsLine(l) {
+      if (!listingStats || l.status !== "published") return "";
+      var r = listingStats[l.id] || {};
+      return '<p class="small muted listing-stats">' + esc(t("stats.hostLine", { views: Number(r.views || 0), whatsapp: Number(r.whatsapp || 0) })) + "</p>";
+    }
 
     // Pour l'admin : rappel des annonces à valider en haut de son espace.
     function showAdminAlert() {
@@ -292,6 +308,7 @@
           '<div class="space-thumb" style="--h:' + (l.hue || 190) + '">' + cover + "</div>" +
           '<div class="space-row-body"><h3>' + YD.listingTextHtml(l.title) + "</h3>" + statusBadge(l.status) +
             (forOther(l) ? ' <span class="small muted">' + esc(t("account.forHost", { name: l.host.name })) + "</span>" : "") +
+            statsLine(l) +
             '<div class="space-row-actions">' +
               '<button type="button" class="link-button" data-action="edit">' + esc(t("account.edit")) + "</button>" +
               (forOther(l) ? '<button type="button" class="link-button" data-action="give">' + esc(t("give.button")) + "</button>" : "") +
@@ -590,6 +607,8 @@
     }).then(function (p) {
       if (!p) return null;
       if (!p.is_admin) { root().innerHTML = '<p class="empty">' + esc(t("admin.denied")) + "</p>"; return null; }
+      // Les visites de l'admin ne comptent pas dans les statistiques (sur cet appareil).
+      YD.setNoStats(true);
       return Promise.all([DB.allListings(), DB.allEvents(), DB.allAds()]);
     }).then(function (res) {
       if (!res) return;
@@ -604,7 +623,7 @@
     function toVisit() { return state.listings.filter(function (l) { return l.status === "published" && !l.verified; }); }
 
     function draw() {
-      var tabs = [["pending", "admin.tabPending", pending().length], ["visit", "admin.tabToVisit", toVisit().length], ["listings", "admin.tabListings"], ["events", "admin.tabEvents"], ["ads", "admin.tabAds"]];
+      var tabs = [["pending", "admin.tabPending", pending().length], ["visit", "admin.tabToVisit", toVisit().length], ["listings", "admin.tabListings"], ["events", "admin.tabEvents"], ["ads", "admin.tabAds"], ["stats", "stats.tab"]];
       root().innerHTML =
         '<div class="space-head"><h1>' + esc(t("admin.title")) + '</h1><div class="space-actions">' +
           '<a class="btn btn-coral" href="account.html?new=1">' + esc(t("admin.addForHost")) + "</a>" +
@@ -614,7 +633,7 @@
             (tab[2] ? ' <span class="count">' + tab[2] + "</span>" : "") + "</button>";
         }).join("") + "</div>" +
         '<div id="admin-panel"></div>';
-      ({ pending: drawPending, visit: drawToVisit, listings: drawListings, events: drawEvents, ads: drawAds })[state.tab]();
+      ({ pending: drawPending, visit: drawToVisit, listings: drawListings, events: drawEvents, ads: drawAds, stats: drawStats })[state.tab]();
     }
 
     function panel() { return document.getElementById("admin-panel"); }
@@ -689,6 +708,95 @@
         ' <span class="badge ' + (running ? "status-published" : "") + '">' + esc(t(running ? "admin.running" : "admin.notRunning")) + "</span>";
     }); }
 
+    // ---------- Statistiques ----------
+
+    var statsDays = 30;
+
+    function drawStats() {
+      panel().innerHTML = '<p class="empty">' + esc(t("common.loading")) + "</p>";
+      DB.stats(statsDays).then(function (st) {
+        if (state.tab !== "stats") return;
+        panel().innerHTML = statsHtml(st);
+      }, function (err) {
+        // Table pas encore créée (supabase/stats.sql pas lancé).
+        if (/stats_|site_stats|function/i.test(err && err.message || "")) {
+          panel().innerHTML = '<p class="empty">' + esc(t("stats.notInstalled")) + "</p>";
+        } else showError(err);
+      });
+    }
+
+    function sum(rows, key) { return rows.reduce(function (n, r) { return n + Number(r[key] || 0); }, 0); }
+    function num(n) { return Number(n || 0).toLocaleString(YD.lang() === "ar" ? "ar-EG" : YD.lang()); }
+    function shortDate(iso) { return YD.formatDate(iso, { day: "numeric", month: "short" }); }
+
+    function statsHtml(st) {
+      var periods = [7, 30, 90].map(function (d) {
+        return '<button type="button" data-stats-days="' + d + '" aria-pressed="' + (d === statsDays) + '">' + esc(t("stats.days", { n: d })) + "</button>";
+      }).join("");
+      var head = '<div class="tabs stats-periods" role="toolbar">' + periods + "</div>" +
+        (st.since ? '<p class="small muted">' + esc(t("stats.since", { date: YD.formatDate(st.since.slice(0, 10), { day: "numeric", month: "long", year: "numeric" }) })) + "</p>" : "");
+      if (!st.since) return head + '<p class="empty">' + esc(t("stats.noData")) + "</p>";
+
+      // Tous les jours de la période, même ceux sans visite (le Caire = UTC+2/+3, on compte en dates locales).
+      var byDay = {};
+      st.daily.forEach(function (r) { byDay[r.day] = r; });
+      var days = [];
+      for (var i = statsDays - 1; i >= 0; i--) {
+        var d = new Date(Date.now() - i * 86400000);
+        var iso = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+        days.push(byDay[iso] || { day: iso, visitors: 0, views: 0, whatsapp: 0, ad_clicks: 0 });
+      }
+      var max = Math.max.apply(null, days.map(function (r) { return Number(r.visitors); }).concat([1]));
+
+      var tiles = [["visitors", "stats.visitors"], ["views", "stats.views"], ["whatsapp", "stats.whatsapp"], ["ad_clicks", "stats.adClicks"]].map(function (k) {
+        return '<div class="stat-tile"><strong>' + num(sum(st.daily, k[0])) + "</strong><span>" + esc(t(k[1])) + "</span></div>";
+      }).join("");
+
+      var chart = '<figure class="stat-chart"><figcaption>' + esc(t("stats.chartTitle")) + "</figcaption>" +
+        '<div class="stat-bars" style="--n:' + days.length + '">' + days.map(function (r) {
+          var label = shortDate(r.day) + " · " + t("stats.chartTip", { visitors: num(r.visitors), views: num(r.views) });
+          return '<div class="stat-bar" tabindex="0" title="' + esc(label) + '" aria-label="' + esc(label) + '">' +
+            '<span style="height:' + (Number(r.visitors) / max * 100) + '%"></span></div>';
+        }).join("") + "</div>" +
+        '<div class="stat-axis small muted"><span>' + esc(shortDate(days[0].day)) + "</span><span>" + esc(t("stats.max", { n: num(max) })) + "</span><span>" + esc(shortDate(days[days.length - 1].day)) + "</span></div></figure>";
+
+      // Annonces : vues de la fiche et clics WhatsApp, de la plus vue à la moins vue.
+      var lstats = {};
+      st.listings.forEach(function (r) { lstats[r.listing_id] = r; });
+      var rows = state.listings.filter(function (l) { return l.status === "published" || lstats[l.id]; }).map(function (l) {
+        var r = lstats[l.id] || {};
+        return { l: l, views: Number(r.views || 0), whatsapp: Number(r.whatsapp || 0) };
+      }).sort(function (a, b) { return b.views - a.views || b.whatsapp - a.whatsapp; });
+      var listingTable = '<h2>' + esc(t("stats.listingsTitle")) + "</h2>" +
+        '<div class="table-wrap"><table class="stat-table"><thead><tr><th>' + esc(t("stats.listing")) + "</th><th>" + esc(t("stats.listingViews")) + "</th><th>" + esc(t("stats.whatsapp")) + "</th></tr></thead><tbody>" +
+        (rows.length ? rows.map(function (x) {
+          return '<tr><td><a href="listing.html?id=' + encodeURIComponent(x.l.id) + '">' + YD.listingTextHtml(x.l.title) + "</a>" +
+            ' <span class="small muted">' + esc(x.l.host.name || "") + "</span></td><td>" + num(x.views) + "</td><td>" + num(x.whatsapp) + "</td></tr>";
+        }).join("") : '<tr><td colspan="3" class="muted">' + esc(t("stats.noData")) + "</td></tr>") + "</tbody></table></div>";
+
+      // Bannières : affichages, clics, taux de clic.
+      var astats = {};
+      st.ads.forEach(function (r) { astats[r.ad_id] = r; });
+      var adRows = state.ads.filter(function (a) { return astats[a.id]; });
+      var adTable = '<h2>' + esc(t("stats.adsTitle")) + "</h2>" + '<p class="small muted">' + esc(t("stats.adsHelp")) + "</p>" +
+        '<div class="table-wrap"><table class="stat-table"><thead><tr><th>' + esc(t("admin.advertiser")) + "</th><th>" + esc(t("stats.adViews")) + "</th><th>" + esc(t("stats.adClicks")) + "</th><th>%</th></tr></thead><tbody>" +
+        (adRows.length ? adRows.map(function (a) {
+          var r = astats[a.id], v = Number(r.views), c = Number(r.clicks);
+          return "<tr><td>" + esc(a.advertiser || loc(a.title)) + ' <span class="small muted">' + esc(t("slot." + a.slot)) + "</span></td><td>" + num(v) + "</td><td>" + num(c) + "</td><td>" +
+            (v ? (c / v * 100).toFixed(1) + "%" : "–") + "</td></tr>";
+        }).join("") : '<tr><td colspan="4" class="muted">' + esc(t("stats.noAds")) + "</td></tr>") + "</tbody></table></div>";
+
+      // D'où viennent les visiteurs.
+      var srcTable = '<h2>' + esc(t("stats.sourcesTitle")) + "</h2>" +
+        '<div class="table-wrap"><table class="stat-table"><thead><tr><th>' + esc(t("stats.source")) + "</th><th>" + esc(t("stats.visitors")) + "</th></tr></thead><tbody>" +
+        (st.sources.length ? st.sources.map(function (r) {
+          return "<tr><td>" + (r.source === "direct" ? esc(t("stats.direct")) : "<bdi>" + esc(r.source) + "</bdi>") + "</td><td>" + num(r.visitors) + "</td></tr>";
+        }).join("") : '<tr><td colspan="2" class="muted">' + esc(t("stats.noData")) + "</td></tr>") + "</tbody></table></div>";
+
+      return head + '<div class="stat-tiles">' + tiles + "</div>" + chart + listingTable + adTable + srcTable +
+        '<p class="small muted">' + esc(t("stats.privacy")) + "</p>";
+    }
+
     // Liste + formulaire, partagé par l'agenda et les bannières.
     function drawCrud(kind, spec, newLabel, editing, summary) {
       var items = state[kind];
@@ -743,6 +851,8 @@
     root().addEventListener("click", function (e) {
       var tab = e.target.closest("[data-tab]");
       if (tab) { state.tab = tab.dataset.tab; hideMessage(); draw(); return; }
+      var period = e.target.closest("[data-stats-days]");
+      if (period) { statsDays = Number(period.dataset.statsDays); drawStats(); return; }
       var card = e.target.closest("[data-id]");
       var zoom = e.target.closest("[data-photo]");
       if (zoom && card) {
