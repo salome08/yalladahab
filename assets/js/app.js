@@ -289,7 +289,7 @@
   }
 
   function listingCard(l) {
-    return '<a class="card listing-card" href="listing.html?id=' + encodeURIComponent(l.id) + '">' +
+    return '<a class="card listing-card" href="stay/' + encodeURIComponent(l.id) + '">' +
       photo(l.hue, t("type." + l.type), photoOf(l, 0)) +
       (l.verified ? '<span class="badge badge-verified">✓ ' + esc(t("card.verified")) + "</span>" : "") +
       '<div class="card-body">' +
@@ -421,6 +421,10 @@
     document.title = title + " · Yalla Dahab";
     // Lien partagé : la page stay/<id> a sa photo et son titre en aperçu sur WhatsApp et Facebook.
     var pageUrl = "https://yalladahab.com/stay/" + encodeURIComponent(l.id);
+    // L'adresse affichée devient celle de la page de partage : copier-coller le lien donne aussi la photo en aperçu.
+    if (!document.body.dataset.listingId && window.history.replaceState) {
+      try { window.history.replaceState(null, "", "/stay/" + encodeURIComponent(l.id) + window.location.hash); } catch (e) {}
+    }
     var photos = l.photos || [];
     // Une photo de la fiche devient cliquable (plein écran) seulement si elle existe vraiment.
     function zoomable(html, i) {

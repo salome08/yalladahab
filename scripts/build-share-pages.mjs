@@ -47,7 +47,7 @@ function page(template, l) {
   if (desc.length > 160) desc = desc.slice(0, 157).replace(/\s+\S*$/, "") + "…";
   desc = `${summary(l)}. ${desc}`;
   const url = `${SITE}/${OUT}/${l.id}`;
-  // Photo de l'annonce d'abord, puis l'image du site en secours (Facebook prend la première qu'il arrive à lire).
+  // Photo de l'annonce ; l'image du site seulement s'il n'y a pas de photo.
   const photo = l.photos && l.photos[0];
   const fallback = `${SITE}/assets/img/share-sauge.jpg`;
   const meta = [
@@ -59,22 +59,26 @@ function page(template, l) {
     `<meta property="og:type" content="website">`,
     `<meta property="og:url" content="${esc(url)}">`,
     `<meta property="og:site_name" content="Yalla Dahab">`,
+    // Une seule image : la 1re photo de l'annonce (sinon Facebook peut choisir l'image du site).
     ...(photo ? [
       `<meta property="og:image" content="${esc(photo)}">`,
+      `<meta property="og:image:secure_url" content="${esc(photo)}">`,
       `<meta property="og:image:alt" content="${esc(text(l.title))}">`,
-    ] : []),
-    `<meta property="og:image" content="${fallback}">`,
-    `<meta property="og:image:secure_url" content="${fallback}">`,
-    `<meta property="og:image:type" content="image/jpeg">`,
-    `<meta property="og:image:width" content="1200">`,
-    `<meta property="og:image:height" content="630">`,
-    `<meta property="og:image:alt" content="Yalla Dahab: stay with Dahab locals">`,
+    ] : [
+      `<meta property="og:image" content="${fallback}">`,
+      `<meta property="og:image:secure_url" content="${fallback}">`,
+      `<meta property="og:image:type" content="image/jpeg">`,
+      `<meta property="og:image:width" content="1200">`,
+      `<meta property="og:image:height" content="630">`,
+      `<meta property="og:image:alt" content="Yalla Dahab: stay with Dahab locals">`,
+    ]),
     `<meta name="twitter:card" content="summary_large_image">`,
     `<meta name="twitter:image" content="${esc(photo || fallback)}">`,
   ].join("\n  ");
   return template
     // Les liens du site (styles, scripts, menu) partent de la racine.
-    .replace('<meta charset="utf-8">', '<meta charset="utf-8">\n  <base href="/">')
+    // (listing.html a déjà <base href="/"> pour que ses liens marchent aussi depuis /stay/…)
+    .replace(/<meta charset="utf-8">(?!\s*<base)/, '<meta charset="utf-8">\n  <base href="/">')
     // On retire les balises génériques de listing.html pour mettre celles de l'annonce.
     .replace(/\s*<title>[^<]*<\/title>/, "")
     .replace(/\s*<meta (name="description"|property="og:[^"]+"|name="twitter:[^"]+")[^>]*>/g, "")
