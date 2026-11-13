@@ -518,3 +518,11 @@ body.db-on .demo-note { display: none; }
 [dir="rtl"] input[type="email"], [dir="rtl"] input[type="tel"], [dir="rtl"] input[type="url"],
 [dir="rtl"] input[type="number"], [dir="rtl"] .code-input { direction: ltr; text-align: right; }
 [dir="rtl"] .code-input { text-align: center; }
+
+/* Prix selon le nombre de personnes */
+.guest-prices { border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 12px 14px; font-size: .95rem; }
+.guest-prices strong { display: block; margin-bottom: 6px; }
+.guest-prices ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+.guest-prices li { display: flex; justify-content: space-between; gap: 12px; }
+.guest-prices li span:last-child { font-weight: 700; color: var(--ink); }
+.guest-price-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; }
