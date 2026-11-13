@@ -416,6 +416,10 @@
           if (r.guests) f.guests.value = r.guests;
           if (r.bedrooms != null) f.bedrooms.value = r.bedrooms;
           if (r.beds) f.beds.value = r.beds;
+          (r.amenities || []).forEach(function (a) {
+            var box = form.querySelector('[name="amenities"][value="' + a + '"]');
+            if (box) box.checked = true;
+          });
           if (r.type && YD.TYPES.indexOf(r.type) !== -1) f.type.value = r.type;
           photos = photos.concat(r.photos || []).slice(0, MAX_PHOTOS);
           drawPhotos();

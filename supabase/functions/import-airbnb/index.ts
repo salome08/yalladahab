@@ -1,6 +1,6 @@
 // Yalla Dahab : import rapide d'une annonce Airbnb.
 // L'hôte colle le lien de son annonce Airbnb dans l'éditeur ; cette fonction lit la page
-// (titre, description, voyageurs, chambres, photos) et copie les photos dans son dossier
+// (titre, description, voyageurs, chambres, lits, équipements, photos) et copie les photos dans son dossier
 // de photos, pour que l'annonce ne dépende pas d'Airbnb. Réservée aux comptes connectés.
 import { createClient } from "jsr:@supabase/supabase-js@2";
 
@@ -59,6 +59,40 @@ function cleanHtml(s: string) {
     .replace(/\n{3,}/g, "\n\n").trim();
 }
 
+// Équipements Airbnb → équipements Yalla Dahab (on compare le nom anglais de l'équipement).
+const AMENITY_RULES: [string, RegExp][] = [
+  ["wifi", /\bwi-?fi\b/i],
+  ["workspace", /workspace/i],
+  ["seaView", /\b(sea|ocean|beach|bay) view\b/i],
+  ["ac", /air conditioning|\bac\b|central air/i],
+  ["kitchen", /kitchen/i],
+  ["terrace", /patio|balcony|terrace/i],
+  ["garden", /garden|backyard/i],
+  ["washer", /washer|washing machine/i],
+  ["rooftop", /rooftop/i],
+  ["pool", /\bpool\b(?! table)/i],
+  ["parking", /parking/i],
+  ["beachAccess", /beach access|beachfront|waterfront/i],
+  ["hammock", /hammock/i],
+  ["pets", /pets allowed/i],
+  ["selfCheckin", /self check-?in|lockbox|keypad|smart lock/i],
+];
+
+// Les équipements sont dans le JSON de la page : {"title":"Wifi", …, "available":true}.
+// On ignore ceux marqués indisponibles (rubrique « Not included » d'Airbnb).
+function amenities(html: string) {
+  const found = new Set<string>();
+  for (const m of html.matchAll(/\{[^{}]*"title":"((?:[^"\\]|\\.)*)"[^{}]*\}/g)) {
+    const obj = m[0];
+    const available = obj.match(/"available":(true|false)/)?.[1];
+    if (available !== "true" || !/"__typename":"Amenity"|"icon":"SYSTEM_/.test(obj)) continue;
+    const title = m[1];
+    if (/^unavailable/i.test(title)) continue;
+    for (const [key, re] of AMENITY_RULES) if (re.test(title)) found.add(key);
+  }
+  return [...found];
+}
+
 function parse(html: string) {
   // <title> : « Nom de l'annonce - Appartements à louer à Dahab, … - Airbnb »
   const pageTitle = decode(html.match(/<title>([^<]*)<\/title>/i)?.[1] || "");
@@ -96,7 +130,7 @@ function parse(html: string) {
   const og = meta(html, "og:image");
   if (!photos.length && og) photos.push(og.split("?")[0]);
 
-  return { title, description, guests, bedrooms, beds, type, photos };
+  return { title, description, guests, bedrooms, beds, type, amenities: amenities(html), photos };
 }
 
 // Copie une photo Airbnb (taille 1200 px) dans le dossier de photos de l'hôte.
