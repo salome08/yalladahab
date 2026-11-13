@@ -339,10 +339,10 @@
           '<h1 class="full">' + esc(t(existing ? "editor.titleEdit" : "editor.titleNew")) + "</h1>" +
           (existing ? '<p class="full">' + statusBadge(existing.status) + "</p>" : "") +
           // Import rapide : on colle le lien Airbnb et le formulaire se remplit.
-          (existing ? "" : '<div class="full import-box"><strong>' + esc(t("import.title")) + '</strong><p class="small muted">' + esc(t("import.help")) + "</p>" +
+          '<div class="full import-box"><strong>' + esc(t(existing ? "import.titleEdit" : "import.title")) + '</strong><p class="small muted">' + esc(t(existing ? "import.helpEdit" : "import.help")) + "</p>" +
             '<div class="import-row"><input type="url" id="import-url" placeholder="https://www.airbnb.com/rooms/…" inputmode="url">' +
             '<button type="button" class="btn btn-coral" id="import-go">' + esc(t("import.button")) + "</button></div>" +
-            '<span class="small muted" id="import-status"></span></div>') +
+            '<span class="small muted" id="import-status"></span></div>' +
           // Admin : le contact affiché peut être celui d'un autre hôte.
           (profile.is_admin ? '<div class="full import-box"><strong>' + esc(t("editor.hostTitle")) + '</strong><p class="small muted">' + esc(t("editor.hostHelp")) + "</p>" +
             '<div class="host-fields"><label>' + esc(t("editor.hostName")) + '<input name="host_name" required value="' + esc(host.name || "") + '"></label>' +
@@ -442,6 +442,8 @@
         var link = document.getElementById("import-url").value.trim();
         var status = document.getElementById("import-status");
         if (!/airbnb\.|abnb\.me/i.test(link)) { showMessage(t("import.badUrl"), true); return; }
+        // Annonce existante : l'import remplace le texte, les chiffres et les photos (rien n'est enregistré avant « Enregistrer »).
+        if (existing && !window.confirm(t("import.confirmEdit"))) return;
         hideMessage();
         status.textContent = t("import.loading");
         uploading = true;
@@ -458,10 +460,12 @@
             if (box) box.checked = true;
           });
           if (r.type && YD.TYPES.indexOf(r.type) !== -1) f.type.value = r.type;
-          photos = photos.concat(r.photos || []).slice(0, MAX_PHOTOS);
+          // Nouvelle annonce : on ajoute les photos. Annonce existante : on remplace par celles d'Airbnb.
+          if (existing && r.photos && r.photos.length) photos = r.photos.slice(0, MAX_PHOTOS);
+          else photos = photos.concat(r.photos || []).slice(0, MAX_PHOTOS);
           drawPhotos();
           status.textContent = "";
-          showMessage(t("import.done", { count: (r.photos || []).length }));
+          showMessage(t(existing ? "import.doneEdit" : "import.done", { count: (r.photos || []).length }));
         }, function (err) {
           status.textContent = "";
           var code = (err && err.message) || "";
