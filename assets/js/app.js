@@ -11,7 +11,7 @@
   var LANGS = ["en", "fr", "ar"];
   var LANG_NAMES = { en: "EN", fr: "FR", ar: "عربي" };
   var RTL_LANGS = ["ar"];
-  var AREAS = ["blue-hole-road", "canyon", "eel-garden", "assala", "mashraba", "masbat", "lighthouse", "dahab-city", "mubarak", "lagoon", "south-coast", "other-dahab", "near-dahab"];
+  var AREAS = ["blue-hole-road", "canyon", "eel-garden", "assala", "mashraba", "masbat", "lighthouse", "dahab-city", "mubarak", "zarnouk", "lagoon", "south-coast", "other-dahab", "near-dahab"];
   var TYPES = ["studio", "apartment", "villa", "room"];
   var AMENITIES = ["wifi", "workspace", "seaView", "ac", "kitchen", "terrace", "garden", "washer",
     "rooftop", "pool", "parking", "gearStorage", "backupPower", "beachAccess", "hammock", "pets", "selfCheckin"];

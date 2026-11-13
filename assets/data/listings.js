@@ -1,5 +1,5 @@
 // Annonces. Les deux premières sont les vraies annonces de Dar Bahr ; les suivantes sont des exemples.
-// area : blue-hole-road | canyon | eel-garden | assala | mashraba | masbat | lighthouse | dahab-city | mubarak | lagoon | south-coast | other-dahab | near-dahab
+// area : blue-hole-road | canyon | eel-garden | assala | mashraba | masbat | lighthouse | dahab-city | mubarak | zarnouk | lagoon | south-coast | other-dahab | near-dahab
 // type : studio | apartment | villa | room
 // pricePerNight / pricePerMonth : mettre null pour afficher « Prix sur demande ».
 // currency : "EGP" par défaut, ou "USD" pour un prix en dollars.
