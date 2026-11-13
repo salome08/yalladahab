@@ -217,6 +217,11 @@
         window.history.replaceState(null, "", "account.html");
         document.getElementById("new-listing").click();
       }
+      // Lien « Modifier » de l'espace admin : ouvre l'annonce d'un hôte dans l'éditeur.
+      var editId = new URLSearchParams(window.location.search).get("edit");
+      if (editId && profile.is_admin) {
+        DB.getListing(editId).then(function (l) { drawEditor(l, true); }, showError);
+      }
       if (profile.is_admin) showAdminAlert();
     }).catch(showError);
 
@@ -325,7 +330,8 @@
       }
     });
 
-    function drawEditor(existing) {
+    function drawEditor(existing, fromAdmin) {
+      var back = fromAdmin ? "admin.html" : "account.html";
       var l = existing || {
         title: {}, description: {}, area: "", type: "", guests: 2, bedrooms: 1, beds: null, currency: "EGP",
         pricePerNight: null, pricePerWeek: null, pricePerMonth: null, wifiMbps: null, amenities: [], photos: [],
@@ -334,7 +340,7 @@
       var photos = l.photos.slice();
       var host = existing ? existing.host : { name: profile.name, whatsapp: profile.whatsapp };
       root().innerHTML =
-        '<a class="back" href="account.html"><span class="arrow">←</span> ' + esc(t("account.myListings")) + "</a>" +
+        '<a class="back" href="' + back + '"><span class="arrow">←</span> ' + esc(t(fromAdmin ? "admin.title" : "account.myListings")) + "</a>" +
         '<form class="form-card" id="listing-form" novalidate>' +
           '<h1 class="full">' + esc(t(existing ? "editor.titleEdit" : "editor.titleNew")) + "</h1>" +
           (existing ? '<p class="full">' + statusBadge(existing.status) + "</p>" : "") +
@@ -376,7 +382,7 @@
             '<div class="photo-grid" id="photo-grid"></div>' +
             '<label class="btn btn-ghost file-button">+ ' + esc(t("editor.addPhotos")) + '<input type="file" id="photo-input" accept="image/*" multiple hidden></label>' +
             '<span class="small muted" id="upload-status"></span></div>' +
-          '<div class="full form-actions"><a class="btn btn-ghost" href="account.html">' + esc(t("editor.cancel")) + "</a>" +
+          '<div class="full form-actions"><a class="btn btn-ghost" href="' + back + '">' + esc(t("editor.cancel")) + "</a>" +
             '<button class="btn" type="submit">' + esc(t(existing ? "editor.submitEdit" : "editor.submitNew")) + "</button></div>" +
         "</form>";
 
@@ -530,6 +536,7 @@
         };
         busy(form, true);
         DB.saveListing(data).then(function (saved) {
+          if (fromAdmin) { window.location.href = "admin.html"; return; }
           if (existing) listings[listings.indexOf(existing)] = saved;
           else listings.unshift(saved);
           drawHome();
@@ -621,7 +628,8 @@
           '<p class="price">' + YD.priceHtml(l) + "</p>" + YD.guestPricesHtml(l) +
           '<div class="thumbs">' + l.photos.map(function (src) { return '<img src="' + esc(src) + '" alt="">'; }).join("") + "</div>" +
           '<p class="small">' + esc(t("listing.host", { name: l.host.name })) + ' · <a href="https://wa.me/' + esc(l.host.whatsapp) + '" target="_blank" rel="noopener">WhatsApp</a></p>' +
-          '<div class="form-actions"><button type="button" class="btn btn-ghost" data-set="rejected">' + esc(t("admin.reject")) + "</button>" +
+          '<div class="form-actions"><a class="btn btn-ghost" href="account.html?edit=' + encodeURIComponent(l.id) + '">' + esc(t("account.edit")) + "</a>" +
+            '<button type="button" class="btn btn-ghost" data-set="rejected">' + esc(t("admin.reject")) + "</button>" +
             '<button type="button" class="btn" data-set="published">' + esc(t("admin.approve")) + "</button></div>" +
         "</div></article>";
       }).join("");
@@ -653,6 +661,7 @@
               }).join("") + "</select>" +
               '<label class="check"><input type="checkbox" data-field="verified"' + (l.verified ? " checked" : "") + "> " + esc(t("admin.verified")) + "</label>" +
               '<label class="check"><input type="checkbox" data-field="featured"' + (l.featured ? " checked" : "") + "> " + esc(t("admin.featured")) + "</label>" +
+              '<a href="account.html?edit=' + encodeURIComponent(l.id) + '">' + esc(t("account.edit")) + "</a>" +
               '<button type="button" class="link-button" data-give-listing>' + esc(t("give.button")) + "</button>" +
               '<button type="button" class="link-button danger" data-delete-listing>' + esc(t("account.delete")) + "</button>" +
             "</div></div></article>";
