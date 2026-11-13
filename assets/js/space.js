@@ -364,20 +364,27 @@
             "</div></details>" +
           "<label>" + esc(t("search.area")) + '<select name="area" required>' + YD.optionList(YD.AREAS, "area.", "—") + "</select></label>" +
           "<label>" + esc(t("search.type")) + '<select name="type" required>' + YD.optionList(YD.TYPES, "type.", "—") + "</select></label>" +
+          // Capacité : 3 champs sur une ligne.
+          '<div class="full field-row field-row-3">' +
           "<label>" + esc(t("host.guests")) + '<input name="guests" type="number" min="1" required value="' + esc(l.guests) + '"></label>' +
           "<label>" + esc(t("host.bedrooms")) + '<input name="bedrooms" type="number" min="0" required value="' + esc(l.bedrooms) + '"></label>' +
           "<label>" + esc(t("host.beds")) + '<input name="beds" type="number" min="1" required value="' + esc(l.beds == null ? "" : l.beds) + '"></label>' +
-          "<label>" + esc(t("editor.currency")) + '<select name="currency"><option value="EGP">EGP</option><option value="USD">USD ($)</option></select></label>' +
-          "<label>" + esc(t("host.wifi")) + '<input name="wifi" type="number" min="0" value="' + esc(l.wifiMbps == null ? "" : l.wifiMbps) + '"></label>' +
+          "</div>" +
+          // Prix : nuit, semaine, mois et devise côte à côte.
+          '<fieldset class="full field-group"><legend>' + esc(t("editor.pricesTitle")) + '</legend><div class="field-row field-row-prices">' +
           "<label>" + esc(t("host.priceNight")).replace("(EGP)", "") + '<input name="priceNight" type="number" min="0" value="' + esc(l.pricePerNight == null ? "" : l.pricePerNight) + '"></label>' +
           "<label>" + esc(t("host.priceWeek")).replace("EGP, ", "") + '<input name="priceWeek" type="number" min="0" value="' + esc(l.pricePerWeek == null ? "" : l.pricePerWeek) + '"></label>' +
           "<label>" + esc(t("host.priceMonth")).replace("EGP, ", "") + '<input name="priceMonth" type="number" min="0" value="' + esc(l.pricePerMonth == null ? "" : l.pricePerMonth) + '"></label>' +
+          "<label>" + esc(t("editor.currency")) + '<select name="currency"><option value="EGP">EGP</option><option value="USD">USD ($)</option></select></label>' +
+          "</div></fieldset>" +
           // Prix selon le nombre de personnes : facultatif, replié par défaut.
           '<details class="full lang-extra" id="guest-prices"' + (l.pricesByGuests ? " open" : "") + "><summary>" + esc(t("editor.pricesByGuests")) + "</summary>" +
             '<div class="lang-extra-body"><p class="small muted">' + esc(t("editor.pricesByGuestsHelp")) + '</p><div class="guest-price-grid" id="guest-price-grid"></div></div></details>' +
           '<div class="full"><label>' + esc(t("host.amenities")) + '</label><div class="checks">' + YD.AMENITIES.map(function (a) {
             return '<label class="check"><input type="checkbox" name="amenities" value="' + a + '"' + (l.amenities.indexOf(a) !== -1 ? " checked" : "") + "> " + esc(t("amenity." + a)) + "</label>";
-          }).join("") + "</div></div>" +
+          }).join("") + "</div>" +
+            // Vitesse internet : à côté des équipements (wifi).
+            '<label class="wifi-field">' + esc(t("host.wifi")) + '<input name="wifi" type="number" min="0" value="' + esc(l.wifiMbps == null ? "" : l.wifiMbps) + '"></label></div>' +
           '<div class="full"><label>' + esc(t("editor.photos")) + '</label><p class="small muted">' + esc(t("editor.photosHelp")) + "</p>" +
             '<div class="photo-grid" id="photo-grid"></div>' +
             '<label class="btn btn-ghost file-button">+ ' + esc(t("editor.addPhotos")) + '<input type="file" id="photo-input" accept="image/*" multiple hidden></label>' +
