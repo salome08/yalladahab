@@ -555,3 +555,13 @@ body.db-on .demo-note { display: none; }
 .guest-prices li { display: flex; justify-content: space-between; gap: 12px; }
 .guest-prices li span:last-child { font-weight: 700; color: var(--ink); }
 .guest-price-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; }
+
+/* Formulaire d'annonce : lignes de champs (capacité, prix) */
+.field-row { display: grid; gap: 16px; align-items: end; }
+.field-row-3 { grid-template-columns: repeat(3, 1fr); }
+.field-row-prices { grid-template-columns: 1fr 1fr 1fr minmax(110px, .7fr); }
+.field-group { border: 0; margin: 0; padding: 0; min-width: 0; }
+.field-group legend { font-weight: 700; padding: 0; margin-bottom: 10px; }
+.wifi-field { display: block; margin-top: 14px; max-width: 320px; }
+@media (max-width: 720px) { .field-row-prices { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 560px) { .field-row-3 { grid-template-columns: 1fr 1fr 1fr; gap: 10px; } }
