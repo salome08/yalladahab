@@ -32,7 +32,10 @@ const safeId = (id) => /^[a-z0-9_-]+$/i.test(id);
 function summary(l) {
   const parts = [EN["type." + l.type] || l.type, `${l.guests} guests`];
   if (l.beds > 0) parts.push(`${l.beds} bed${l.beds === 1 ? "" : "s"}`);
-  if (l.price_night) parts.push(`${money(l.price_night, l.currency)} / night`);
+  // Prix selon le nombre de personnes : on affiche le plus petit (« from »).
+  const table = l.price_by_guests && typeof l.price_by_guests === "object" ? Object.values(l.price_by_guests).map(Number).filter((n) => n > 0) : [];
+  const night = table.length ? Math.min(...table, ...(l.price_night ? [l.price_night] : [])) : l.price_night;
+  if (night) parts.push(`${table.length ? "from " : ""}${money(night, l.currency)} / night`);
   if (l.price_month) parts.push(`${money(l.price_month, l.currency)} / month`);
   return parts.join(" · ");
 }

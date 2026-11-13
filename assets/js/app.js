@@ -86,9 +86,45 @@
       "<span>" + esc(label || "") + "</span></div>";
   }
   function photoOf(l, i) { return l.photos && l.photos[i]; }
+  // Prix selon le nombre de personnes (facultatif) : { "3": 2750, "4": 3000, … }.
+  // Une case vide = le prix par nuit normal. Renvoie des groupes [{ from, to, price }]
+  // (ex. 1–2 pers. 2500), ou null si le prix ne change pas avec le nombre de personnes.
+  function guestPrices(l) {
+    var table = l.pricesByGuests;
+    if (!table || typeof table !== "object") return null;
+    var max = Math.max(l.guests || 1, 1);
+    var groups = [];
+    for (var n = 1; n <= max; n++) {
+      var p = Number(table[n]) > 0 ? Number(table[n]) : l.pricePerNight;
+      if (!p) continue;
+      var last = groups[groups.length - 1];
+      if (last && last.price === p && last.to === n - 1) last.to = n;
+      else groups.push({ from: n, to: n, price: p });
+    }
+    return groups.some(function (g) { return g.price !== groups[0].price; }) ? groups : null;
+  }
+  // Le plus petit prix par nuit : c'est lui qui sert aux cartes, au filtre et au tri.
+  function nightFrom(l) {
+    var groups = guestPrices(l);
+    if (!groups) return l.pricePerNight;
+    return Math.min.apply(null, groups.map(function (g) { return g.price; }));
+  }
+  function guestsLabel(g) {
+    if (g.from === g.to) return t(g.from === 1 ? "price.oneGuest" : "price.nGuests", { n: g.from });
+    return t("price.rangeGuests", { from: g.from, to: g.to });
+  }
+  function guestPricesHtml(l) {
+    var groups = guestPrices(l);
+    if (!groups) return "";
+    return '<div class="guest-prices"><strong>' + esc(t("price.byGuests")) + "</strong><ul>" + groups.map(function (g) {
+      return "<li><span>" + esc(guestsLabel(g)) + "</span><span>" + money(g.price, l.currency) + "</span></li>";
+    }).join("") + "</ul></div>";
+  }
   function priceHtml(l) {
-    if (!l.pricePerNight) return "<strong>" + esc(t("card.onRequest")) + "</strong>";
-    return "<strong>" + money(l.pricePerNight, l.currency) + "</strong> / " + esc(t("card.night")) +
+    var night = nightFrom(l);
+    if (!night) return "<strong>" + esc(t("card.onRequest")) + "</strong>";
+    return (guestPrices(l) ? esc(t("price.from")) + " " : "") +
+      "<strong>" + money(night, l.currency) + "</strong> / " + esc(t("card.night")) +
       (l.pricePerMonth ? ' <span class="muted">· ' + money(l.pricePerMonth, l.currency) + " / " + esc(t("card.month")) + "</span>" : "");
   }
   function formatDate(iso, opts) {
@@ -311,8 +347,8 @@
       var workspace = form.elements.workspace.checked;
       var verified = form.elements.verified.checked;
       var results = LISTINGS.filter(function (l) {
-        var price = inEgp(monthly ? l.pricePerMonth : l.pricePerNight, l.currency);
-        var onRequest = !l.pricePerNight;
+        var price = inEgp(monthly ? l.pricePerMonth : nightFrom(l), l.currency);
+        var onRequest = !nightFrom(l);
         if (area && l.area !== area) return false;
         if (type && l.type !== type) return false;
         if (monthly && !l.pricePerMonth && !onRequest) return false;
@@ -321,7 +357,7 @@
         if (verified && !l.verified) return false;
         return true;
       });
-      function sortPrice(l) { return inEgp(monthly ? l.pricePerMonth : l.pricePerNight, l.currency) || Infinity; }
+      function sortPrice(l) { return inEgp(monthly ? l.pricePerMonth : nightFrom(l), l.currency) || Infinity; }
       results.sort(function (a, b) { return sortPrice(a) - sortPrice(b); });
       document.getElementById("results-count").textContent = t("listings.count", { n: results.length });
       document.getElementById("results").innerHTML = results.length
@@ -385,6 +421,7 @@
         "</div>" +
         '<aside class="contact-box">' +
           '<p class="price">' + priceHtml(l) + "</p>" +
+          guestPricesHtml(l) +
           '<div class="date-row">' +
             "<label>" + esc(t("listing.from")) + '<input type="date" id="date-from"></label>' +
             "<label>" + esc(t("listing.to")) + '<input type="date" id="date-to"></label>' +
@@ -587,7 +624,7 @@
 
   window.YD = {
     t: t, loc: loc, locHtml: locHtml, esc: esc, money: money, lang: function () { return lang; },
-    formatDate: formatDate, bedsText: bedsText, optionList: optionList, applyStaticTexts: applyStaticTexts,
+    formatDate: formatDate, bedsText: bedsText, priceHtml: priceHtml, guestPricesHtml: guestPricesHtml, optionList: optionList, applyStaticTexts: applyStaticTexts,
     AREAS: AREAS, TYPES: TYPES, AMENITIES: AMENITIES,
     registerPage: function (name, init) { PAGES[name] = init; PRIVATE_PAGES[name] = true; }
   };

@@ -365,6 +365,9 @@
           "<label>" + esc(t("host.wifi")) + '<input name="wifi" type="number" min="0" value="' + esc(l.wifiMbps == null ? "" : l.wifiMbps) + '"></label>' +
           "<label>" + esc(t("host.priceNight")).replace("(EGP)", "") + '<input name="priceNight" type="number" min="0" value="' + esc(l.pricePerNight == null ? "" : l.pricePerNight) + '"></label>' +
           "<label>" + esc(t("host.priceMonth")).replace("EGP, ", "") + '<input name="priceMonth" type="number" min="0" value="' + esc(l.pricePerMonth == null ? "" : l.pricePerMonth) + '"></label>' +
+          // Prix selon le nombre de personnes : facultatif, replié par défaut.
+          '<details class="full lang-extra" id="guest-prices"' + (l.pricesByGuests ? " open" : "") + "><summary>" + esc(t("editor.pricesByGuests")) + "</summary>" +
+            '<div class="lang-extra-body"><p class="small muted">' + esc(t("editor.pricesByGuestsHelp")) + '</p><div class="guest-price-grid" id="guest-price-grid"></div></div></details>' +
           '<div class="full"><label>' + esc(t("host.amenities")) + '</label><div class="checks">' + YD.AMENITIES.map(function (a) {
             return '<label class="check"><input type="checkbox" name="amenities" value="' + a + '"' + (l.amenities.indexOf(a) !== -1 ? " checked" : "") + "> " + esc(t("amenity." + a)) + "</label>";
           }).join("") + "</div></div>" +
@@ -391,6 +394,40 @@
         }).join("");
       }
       drawPhotos();
+
+      // Une case par nombre de personnes, de 1 jusqu'à la capacité du logement.
+      // On garde ce qui a déjà été tapé quand la capacité change.
+      var guestPriceValues = {};
+      Object.keys(l.pricesByGuests || {}).forEach(function (k) { guestPriceValues[k] = String(l.pricesByGuests[k]); });
+      function readGuestPrices() {
+        form.querySelectorAll("[data-guests-price]").forEach(function (input) { guestPriceValues[input.dataset.guestsPrice] = input.value; });
+      }
+      function drawGuestPrices() {
+        readGuestPrices();
+        var max = Math.min(Math.max(Number(form.elements.guests.value) || 1, 1), 30);
+        var base = form.elements.priceNight.value;
+        var html = "";
+        for (var n = 1; n <= max; n++) {
+          html += "<label>" + esc(t(n === 1 ? "price.oneGuest" : "price.nGuests", { n: n })) +
+            '<input type="number" min="0" inputmode="numeric" data-guests-price="' + n + '" placeholder="' + esc(base) + '" value="' + esc(guestPriceValues[n] || "") + '"></label>';
+        }
+        document.getElementById("guest-price-grid").innerHTML = html;
+      }
+      drawGuestPrices();
+      form.elements.guests.addEventListener("input", drawGuestPrices);
+      form.elements.priceNight.addEventListener("input", function () {
+        form.querySelectorAll("[data-guests-price]").forEach(function (input) { input.placeholder = form.elements.priceNight.value; });
+      });
+      // Ne garde que les cases remplies, jusqu'à la capacité, et seulement si un prix diffère du prix par nuit.
+      function collectGuestPrices(guests, base) {
+        readGuestPrices();
+        var table = {}, differs = false;
+        for (var n = 1; n <= guests; n++) {
+          var v = Number(guestPriceValues[n]);
+          if (guestPriceValues[n] && v > 0) { table[n] = v; if (v !== base) differs = true; }
+        }
+        return differs ? table : null;
+      }
 
       document.getElementById("photo-grid").addEventListener("click", function (e) {
         var b = e.target.closest("button");
@@ -477,6 +514,7 @@
           guests: Number(f.guests.value), bedrooms: Number(f.bedrooms.value), beds: Number(f.beds.value),
           currency: f.currency.value,
           pricePerNight: numberOrNull(f.priceNight.value), pricePerMonth: numberOrNull(f.priceMonth.value),
+          pricesByGuests: collectGuestPrices(Number(f.guests.value), numberOrNull(f.priceNight.value)),
           wifiMbps: numberOrNull(f.wifi.value),
           amenities: Array.prototype.map.call(form.querySelectorAll('[name="amenities"]:checked'), function (c) { return c.value; }),
           photos: photos, hue: l.hue,
@@ -575,8 +613,7 @@
           "<h3>" + YD.locHtml(l.title) + "</h3>" +
           (l.createdAt ? '<p class="small muted review-meta">' + esc(t("admin.submittedOn", { date: YD.formatDate(l.createdAt.slice(0, 10), { day: "numeric", month: "long", year: "numeric" }) })) + "</p>" : "") +
           "<p>" + YD.locHtml(l.description) + "</p>" +
-          '<p class="price">' + (l.pricePerNight ? YD.money(l.pricePerNight, l.currency) + " / " + esc(t("card.night")) : esc(t("card.onRequest"))) +
-            (l.pricePerMonth ? " · " + YD.money(l.pricePerMonth, l.currency) + " / " + esc(t("card.month")) : "") + "</p>" +
+          '<p class="price">' + YD.priceHtml(l) + "</p>" + YD.guestPricesHtml(l) +
           '<div class="thumbs">' + l.photos.map(function (src) { return '<img src="' + esc(src) + '" alt="">'; }).join("") + "</div>" +
           '<p class="small">' + esc(t("listing.host", { name: l.host.name })) + ' · <a href="https://wa.me/' + esc(l.host.whatsapp) + '" target="_blank" rel="noopener">WhatsApp</a></p>' +
           '<div class="form-actions"><button type="button" class="btn btn-ghost" data-set="rejected">' + esc(t("admin.reject")) + "</button>" +
