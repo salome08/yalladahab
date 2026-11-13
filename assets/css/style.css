@@ -312,16 +312,46 @@ a.banner-empty:hover { color: var(--muted); border-color: var(--primary); box-sh
 .gallery .photo { aspect-ratio: auto; min-height: 150px; }
 .gallery .photo:first-child { grid-row: 1 / 3; min-height: 320px; }
 @media (max-width: 600px) { .gallery { grid-template-columns: 1fr; grid-template-rows: auto; border-radius: 18px; } .gallery .photo:not(:first-child) { display: none; } .gallery .photo:first-child { min-height: 240px; } }
-.more-photos { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; margin-top: 10px; }
-.more-photos:empty { display: none; }
-.more-photos img { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: var(--radius-sm); }
+/* Carrousel de petites photos (fiche logement, cartes « À valider » de l'admin). */
+.strip { position: relative; }
+.strip-track {
+  display: flex; gap: 10px; overflow-x: auto; scroll-snap-type: x mandatory; scroll-behavior: smooth;
+  scrollbar-width: none; -webkit-overflow-scrolling: touch; padding: 2px;
+}
+.strip-track::-webkit-scrollbar { display: none; }
+.strip-item {
+  flex: 0 0 auto; width: 160px; aspect-ratio: 4 / 3; padding: 0; border: 0; border-radius: var(--radius-sm);
+  overflow: hidden; cursor: zoom-in; scroll-snap-align: start; background: var(--line, #ddd);
+}
+.strip-item img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .4s var(--ease); }
+.strip-item:hover img { transform: scale(1.05); }
+.strip-item:focus-visible { outline: 3px solid var(--primary); outline-offset: 2px; }
+.strip-nav {
+  position: absolute; top: 50%; z-index: 1; width: 36px; height: 36px; margin-top: -18px; padding: 0;
+  display: inline-flex; align-items: center; justify-content: center;
+  border: 0; border-radius: 999px; cursor: pointer; color: var(--ink);
+  background: var(--photo-chip); box-shadow: var(--shadow);
+  -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); transition: opacity .2s;
+}
+.strip-nav:hover { background: var(--surface); }
+.strip-prev { inset-inline-start: 6px; }
+.strip-next { inset-inline-end: 6px; }
+.strip-prev svg { transform: scaleX(-1); }
+[dir="rtl"] .strip-prev svg { transform: none; }
+[dir="rtl"] .strip-next svg { transform: scaleX(-1); }
+.strip[data-at-start="true"] .strip-prev, .strip[data-at-end="true"] .strip-next { opacity: 0; pointer-events: none; }
+.more-photos { margin-top: 10px; }
+.thumbs { margin: 12px 0; }
+.thumbs .strip-item { width: 140px; }
+@media (min-width: 601px) { .strip-mobile-only { display: none; } }
+@media (max-width: 600px) { .strip-item { width: 120px; } .thumbs .strip-item { width: 120px; } }
 
 /* Photos cliquables de la fiche logement, et visionneuse plein écran (toujours sur fond noir, en clair comme en sombre). */
 .gallery { position: relative; }
-.photo.zoomable, .more-photos img { cursor: zoom-in; }
+.photo.zoomable { cursor: zoom-in; }
 .photo.zoomable img { transition: transform .5s var(--ease); }
 .photo.zoomable:hover img { transform: scale(1.03); }
-.photo.zoomable:focus-visible, .more-photos img:focus-visible { outline: 3px solid var(--primary); outline-offset: -3px; }
+.photo.zoomable:focus-visible { outline: 3px solid var(--primary); outline-offset: -3px; }
 .gallery-all {
   position: absolute; inset-inline-end: 14px; bottom: 14px; z-index: 1;
   border: 0; border-radius: 999px; padding: 8px 14px; font: inherit; font-size: .84rem; font-weight: 700;
@@ -475,8 +505,6 @@ body.db-on .account-cta.db-only { display: flex; }
 body.db-on .demo-note { display: none; }
 .tabs .count { display: inline-block; min-width: 20px; border-radius: 999px; background: var(--accent); color: #fff; font-size: .75rem; padding: 1px 6px; }
 .review-card { margin-bottom: 16px; }
-.thumbs { display: flex; gap: 8px; overflow-x: auto; }
-.thumbs img { width: 120px; height: 90px; object-fit: cover; border-radius: 10px; flex-shrink: 0; }
 .crud-list { margin-top: 16px; }
 .crud-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; background: var(--surface); border-radius: var(--radius-sm); padding: 12px 16px; box-shadow: var(--shadow); }
 .crud-row .space-row-actions { margin: 0; }
