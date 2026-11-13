@@ -14,7 +14,8 @@
   var AREAS = ["blue-hole-road", "canyon", "eel-garden", "assala", "mashraba", "masbat", "lighthouse", "dahab-city", "mubarak", "zarnouk", "lagoon", "south-coast", "other-dahab", "near-dahab"];
   var TYPES = ["studio", "apartment", "villa", "room"];
   var AMENITIES = ["wifi", "workspace", "seaView", "ac", "kitchen", "terrace", "garden", "washer",
-    "rooftop", "pool", "parking", "gearStorage", "backupPower", "beachAccess", "hammock", "pets", "selfCheckin"];
+    "rooftop", "pool", "parking", "gearStorage", "backupPower", "beachAccess", "hammock", "pets", "selfCheckin",
+    "tv", "hotWater", "fridge", "microwave", "coffeeMaker", "kettle", "cookingBasics", "dishes", "bedLinens", "essentials", "hairDryer", "iron", "fan", "heating", "elevator", "bbq", "outdoorShower", "outdoorDining", "bathtub", "safe", "firstAid", "longStays", "luggage", "cleaning"];
   var AD_PRICES = { home: 1500, search: 800, event: 300 };
 
   // ---------- Langue ----------

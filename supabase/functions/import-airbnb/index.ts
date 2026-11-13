@@ -76,6 +76,30 @@ const AMENITY_RULES: [string, RegExp][] = [
   ["hammock", /hammock/i],
   ["pets", /pets allowed/i],
   ["selfCheckin", /self check-?in|lockbox|keypad|smart lock/i],
+  ["tv", /\btv\b|television/i],
+  ["hotWater", /hot water(?! kettle)/i],
+  ["fridge", /refrigerator|fridge/i],
+  ["microwave", /microwave/i],
+  ["coffeeMaker", /coffee/i],
+  ["kettle", /kettle/i],
+  ["cookingBasics", /cooking basics|stove|\boven\b/i],
+  ["dishes", /dishes|silverware|cutlery/i],
+  ["bedLinens", /bed linen|extra pillows/i],
+  ["essentials", /^essentials|towels/i],
+  ["hairDryer", /hair ?dryer/i],
+  ["iron", /\biron\b/i],
+  ["fan", /\bfans?\b/i],
+  ["heating", /heating|heater/i],
+  ["elevator", /elevator/i],
+  ["bbq", /bbq|barbecue|grill/i],
+  ["outdoorShower", /outdoor shower/i],
+  ["outdoorDining", /outdoor dining|outdoor furniture/i],
+  ["bathtub", /bathtub/i],
+  ["safe", /\bsafe\b/i],
+  ["firstAid", /first aid/i],
+  ["longStays", /long term stays/i],
+  ["luggage", /luggage/i],
+  ["cleaning", /cleaning|housekeeping/i],
 ];
 
 // Les équipements sont dans le JSON de la page : {"title":"Wifi", …, "available":true}.
@@ -107,7 +131,9 @@ function parse(html: string) {
   if (!description) description = jsonString(html, "description") || meta(html, "description");
 
   const facts = `${ogTitle} ${pageTitle} ${html.slice(0, 400000)}`;
-  const guests = Number(facts.match(/(\d+)\s+guests?/i)?.[1]) || null;
+  // Capacité : champ JSON « personCapacity » d'Airbnb, sinon « 4 guests » dans le texte.
+  const guests = Number(html.match(/"personCapacity":(\d+)/)?.[1])
+    || Number(facts.match(/(\d+)\s+guests?\b/i)?.[1]) || null;
   const bedrooms = /\bstudio\b/i.test(ogTitle) ? 0 : (Number(facts.match(/(\d+)\s+bedrooms?/i)?.[1]) || null);
   const beds = Number(facts.match(/(\d+)\s+beds?\b/i)?.[1]) || null;
 
