@@ -88,7 +88,8 @@
       if (f.type === "i18n" || f.type === "i18nText") {
         out[f.name] = {};
         ["en", "fr"].forEach(function (l) {
-          var val = el[f.name + "_" + l].value.trim();
+          var input = el[f.name + "_" + l];
+          var val = input ? input.value.trim() : "";
           if (val) out[f.name][l] = val;
         });
       } else if (f.type === "checkbox") {
@@ -289,7 +290,7 @@
         var toggle = l.status === "published" ? ["paused", "account.pause"] : l.status === "paused" ? ["published", "account.resume"] : null;
         return '<article class="space-row" data-id="' + esc(l.id) + '">' +
           '<div class="space-thumb" style="--h:' + (l.hue || 190) + '">' + cover + "</div>" +
-          '<div class="space-row-body"><h3>' + YD.locHtml(l.title) + "</h3>" + statusBadge(l.status) +
+          '<div class="space-row-body"><h3>' + YD.listingTextHtml(l.title) + "</h3>" + statusBadge(l.status) +
             (forOther(l) ? ' <span class="small muted">' + esc(t("account.forHost", { name: l.host.name })) + "</span>" : "") +
             '<div class="space-row-actions">' +
               '<button type="button" class="link-button" data-action="edit">' + esc(t("account.edit")) + "</button>" +
@@ -353,15 +354,10 @@
           (profile.is_admin ? '<div class="full host-box"><strong>' + esc(t("editor.hostTitle")) + '</strong><p class="small muted">' + esc(t("editor.hostHelp")) + "</p>" +
             '<div class="host-fields"><label>' + esc(t("editor.hostName")) + '<input name="host_name" required value="' + esc(host.name || "") + '"></label>' +
             "<label>" + esc(t("editor.hostWhatsapp")) + '<input name="host_whatsapp" type="tel" required placeholder="+20 10 1234 5678" value="' + esc(host.whatsapp || "") + '"></label></div></div>' : "") +
-          // Anglais demandé (compris par tous les voyageurs) ; le français est un plus, replié par défaut.
+          // Texte de l'annonce en anglais seulement (compris par tous les voyageurs).
           '<label class="full">' + esc(t("editor.title")) + '<input name="title_en" dir="auto" required value="' + esc(l.title.en || "") + '" placeholder="' + esc(t("editor.titlePlaceholder")) + '"></label>' +
           '<label class="full">' + esc(t("editor.desc")) + '<textarea name="description_en" dir="auto" required>' + esc(l.description.en || "") + "</textarea></label>" +
           '<p class="full small muted">' + esc(t("editor.langHelp")) + "</p>" +
-          '<details class="full lang-extra"' + (l.title.fr || l.description.fr ? " open" : "") + "><summary>" + esc(t("editor.addFrench")) + "</summary>" +
-            '<div class="lang-extra-body">' +
-              "<label>" + esc(t("editor.titleFr")) + '<input name="title_fr" value="' + esc(l.title.fr || "") + '"></label>' +
-              "<label>" + esc(t("editor.descFr")) + '<textarea name="description_fr">' + esc(l.description.fr || "") + "</textarea></label>" +
-            "</div></details>" +
           "<label>" + esc(t("search.area")) + '<select name="area" required>' + YD.optionList(YD.AREAS, "area.", "—") + "</select></label>" +
           "<label>" + esc(t("search.type")) + '<select name="type" required>' + YD.optionList(YD.TYPES, "type.", "—") + "</select></label>" +
           // Capacité : 3 champs sur une ligne.
@@ -530,7 +526,8 @@
         var f = form.elements;
         var data = {
           id: existing && existing.id,
-          title: text.title, description: text.description,
+          // On garde le français déjà enregistré (plus affiché ni modifiable).
+          title: Object.assign({}, l.title, text.title), description: Object.assign({}, l.description, text.description),
           area: f.area.value, type: f.type.value,
           guests: Number(f.guests.value), bedrooms: Number(f.bedrooms.value), beds: Number(f.beds.value),
           currency: f.currency.value,
@@ -632,9 +629,9 @@
       panel().innerHTML = list.map(function (l) {
         return '<article class="card review-card" data-id="' + esc(l.id) + '"><div class="card-body">' +
           '<p class="card-meta">' + esc(t("area." + l.area)) + " · " + esc(t("type." + l.type)) + " · " + l.guests + " " + esc(t("card.guests")) + YD.bedsText(l) + "</p>" +
-          "<h3>" + YD.locHtml(l.title) + "</h3>" +
+          "<h3>" + YD.listingTextHtml(l.title) + "</h3>" +
           (l.createdAt ? '<p class="small muted review-meta">' + esc(t("admin.submittedOn", { date: YD.formatDate(l.createdAt.slice(0, 10), { day: "numeric", month: "long", year: "numeric" }) })) + "</p>" : "") +
-          "<p>" + YD.locHtml(l.description) + "</p>" +
+          "<p>" + YD.listingTextHtml(l.description) + "</p>" +
           '<p class="price">' + YD.priceHtml(l) + "</p>" + YD.guestPricesHtml(l) +
           (l.photos.length ? YD.photoStrip(l.photos, 0, "thumbs") : "") +
           '<p class="small">' + esc(t("listing.host", { name: l.host.name })) + ' · <a href="https://wa.me/' + esc(l.host.whatsapp) + '" target="_blank" rel="noopener">WhatsApp</a></p>' +
@@ -652,7 +649,7 @@
       panel().innerHTML = '<p class="muted">' + esc(t("admin.toVisitHelp")) + '</p><div class="space-list">' + list.map(function (l) {
         return '<article class="space-row" data-id="' + esc(l.id) + '">' +
           '<div class="space-thumb" style="--h:' + (l.hue || 190) + '">' + (l.photos[0] ? '<img src="' + esc(l.photos[0]) + '" alt="" onerror="this.remove()">' : "") + "</div>" +
-          '<div class="space-row-body"><h3><a href="listing.html?id=' + encodeURIComponent(l.id) + '">' + YD.locHtml(l.title) + "</a></h3>" +
+          '<div class="space-row-body"><h3><a href="listing.html?id=' + encodeURIComponent(l.id) + '">' + YD.listingTextHtml(l.title) + "</a></h3>" +
             '<p class="small muted">' + esc(t("area." + l.area)) + " · " + esc(l.host.name) + ' · <a href="https://wa.me/' + esc(l.host.whatsapp) + '" target="_blank" rel="noopener">WhatsApp</a></p>' +
             '<div class="space-row-actions"><button type="button" class="btn btn-small" data-verify>✓ ' + esc(t("admin.markVerified")) + "</button></div>" +
           "</div></article>";
@@ -664,7 +661,7 @@
       panel().innerHTML = '<div class="space-list">' + state.listings.map(function (l) {
         return '<article class="space-row" data-id="' + esc(l.id) + '">' +
           '<div class="space-thumb" style="--h:' + (l.hue || 190) + '">' + (l.photos[0] ? '<img src="' + esc(l.photos[0]) + '" alt="" onerror="this.remove()">' : "") + "</div>" +
-          '<div class="space-row-body"><h3><a href="listing.html?id=' + encodeURIComponent(l.id) + '">' + YD.locHtml(l.title) + "</a></h3>" +
+          '<div class="space-row-body"><h3><a href="listing.html?id=' + encodeURIComponent(l.id) + '">' + YD.listingTextHtml(l.title) + "</a></h3>" +
             '<p class="small muted">' + esc(l.host.name) + ' · <a href="https://wa.me/' + esc(l.host.whatsapp) + '" target="_blank" rel="noopener">WhatsApp</a></p>' +
             '<div class="space-row-actions">' +
               '<select data-field="status" aria-label="' + esc(t("admin.status")) + '">' + ["pending", "published", "paused", "rejected"].map(function (s) {

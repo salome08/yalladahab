@@ -63,6 +63,9 @@
   function loc(obj) { return obj ? (obj[lang] || obj.en || obj.fr || "") : ""; }
   // Texte écrit par un hôte (souvent en anglais) : isolé pour qu'il s'affiche bien dans une page en arabe.
   function locHtml(obj) { return "<bdi>" + esc(loc(obj)) + "</bdi>"; }
+  // Titre et description d'une annonce : toujours en anglais (le français n'est plus proposé).
+  function listingText(obj) { return obj ? (obj.en || obj.fr || "") : ""; }
+  function listingTextHtml(obj) { return "<bdi>" + esc(listingText(obj)) + "</bdi>"; }
   function bidi(s) { return "<bdi>" + esc(s) + "</bdi>"; }
 
   function applyStaticTexts() {
@@ -292,7 +295,7 @@
       '<div class="card-body">' +
         '<p class="card-meta">' + esc(t("area." + l.area)) + " · " + l.guests + " " + esc(t("card.guests")) + bedsText(l) +
           (l.wifiMbps ? " · " + l.wifiMbps + " " + esc(t("card.mbps")) : "") + "</p>" +
-        "<h3>" + locHtml(l.title) + "</h3>" +
+        "<h3>" + listingTextHtml(l.title) + "</h3>" +
         '<p class="price">' + priceHtml(l) + "</p>" +
       "</div></a>";
   }
@@ -414,7 +417,7 @@
       root.innerHTML = '<p class="empty">' + esc(t("listing.notFound")) + ' <a href="listings.html">' + esc(t("listing.back")) + "</a></p>";
       return;
     }
-    var title = loc(l.title);
+    var title = listingText(l.title);
     document.title = title + " · Yalla Dahab";
     // Lien partagé : la page stay/<id> a sa photo et son titre en aperçu sur WhatsApp et Facebook.
     var pageUrl = "https://yalladahab.com/stay/" + encodeURIComponent(l.id);
@@ -438,7 +441,7 @@
             (l.bedrooms > 0 ? " · " + l.bedrooms + " " + esc(t(l.bedrooms === 1 ? "card.bedroom" : "card.bedrooms")) : "") + bedsText(l) + "</p>" +
           "<h1>" + bidi(title) + (l.verified ? ' <span class="badge badge-verified">✓ ' + esc(t("card.verified")) + "</span>" : "") + "</h1>" +
           '<p class="muted">' + esc(t("listing.host", { name: l.host.name })) + "</p>" +
-          '<p class="lead">' + locHtml(l.description) + "</p>" +
+          '<p class="lead">' + listingTextHtml(l.description) + "</p>" +
           (l.wifiMbps ? '<p class="wifi-pill">📶 ' + esc(t("listing.wifiTested", { n: l.wifiMbps })) + "</p>" : "") +
           "<h2>" + esc(t("listing.amenities")) + "</h2>" +
           amenitiesHtml(l.amenities) +
@@ -691,7 +694,7 @@
   var PRIVATE_PAGES = { login: true, account: true, admin: true };
 
   window.YD = {
-    t: t, loc: loc, locHtml: locHtml, esc: esc, money: money, lang: function () { return lang; },
+    t: t, loc: loc, locHtml: locHtml, listingText: listingText, listingTextHtml: listingTextHtml, esc: esc, money: money, lang: function () { return lang; },
     formatDate: formatDate, photoStrip: photoStrip, refreshStrips: refreshStrips, openLightbox: openLightbox, bedsText: bedsText, priceHtml: priceHtml, guestPricesHtml: guestPricesHtml, optionList: optionList, applyStaticTexts: applyStaticTexts,
     AREAS: AREAS, TYPES: TYPES, AMENITIES: AMENITIES, AMENITY_GROUPS: AMENITY_GROUPS,
     registerPage: function (name, init) { PAGES[name] = init; PRIVATE_PAGES[name] = true; }
