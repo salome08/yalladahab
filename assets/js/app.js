@@ -236,12 +236,17 @@
 
   // ---------- Cartes ----------
 
+  // « · 3 lits » (rien si l'hôte n'a pas encore indiqué le nombre de lits).
+  function bedsText(l) {
+    return l.beds > 0 ? " · " + l.beds + " " + esc(t(l.beds === 1 ? "card.bed" : "card.beds")) : "";
+  }
+
   function listingCard(l) {
     return '<a class="card listing-card" href="listing.html?id=' + encodeURIComponent(l.id) + '">' +
       photo(l.hue, t("type." + l.type), photoOf(l, 0)) +
       (l.verified ? '<span class="badge badge-verified">✓ ' + esc(t("card.verified")) + "</span>" : "") +
       '<div class="card-body">' +
-        '<p class="card-meta">' + esc(t("area." + l.area)) + " · " + l.guests + " " + esc(t("card.guests")) +
+        '<p class="card-meta">' + esc(t("area." + l.area)) + " · " + l.guests + " " + esc(t("card.guests")) + bedsText(l) +
           (l.wifiMbps ? " · " + l.wifiMbps + " " + esc(t("card.mbps")) : "") + "</p>" +
         "<h3>" + locHtml(l.title) + "</h3>" +
         '<p class="price">' + priceHtml(l) + "</p>" +
@@ -367,7 +372,8 @@
       }).join("") + "</div>" : "") +
       '<div class="listing-layout">' +
         "<div>" +
-          '<p class="card-meta">' + esc(t("area." + l.area)) + " · " + esc(t("type." + l.type)) + " · " + l.guests + " " + esc(t("card.guests")) + "</p>" +
+          '<p class="card-meta">' + esc(t("area." + l.area)) + " · " + esc(t("type." + l.type)) + " · " + l.guests + " " + esc(t("card.guests")) +
+            (l.bedrooms > 0 ? " · " + l.bedrooms + " " + esc(t(l.bedrooms === 1 ? "card.bedroom" : "card.bedrooms")) : "") + bedsText(l) + "</p>" +
           "<h1>" + bidi(title) + (l.verified ? ' <span class="badge badge-verified">✓ ' + esc(t("card.verified")) + "</span>" : "") + "</h1>" +
           '<p class="muted">' + esc(t("listing.host", { name: l.host.name })) + "</p>" +
           '<p class="lead">' + locHtml(l.description) + "</p>" +
@@ -580,7 +586,7 @@
 
   window.YD = {
     t: t, loc: loc, locHtml: locHtml, esc: esc, money: money, lang: function () { return lang; },
-    formatDate: formatDate, optionList: optionList, applyStaticTexts: applyStaticTexts,
+    formatDate: formatDate, bedsText: bedsText, optionList: optionList, applyStaticTexts: applyStaticTexts,
     AREAS: AREAS, TYPES: TYPES, AMENITIES: AMENITIES,
     registerPage: function (name, init) { PAGES[name] = init; PRIVATE_PAGES[name] = true; }
   };

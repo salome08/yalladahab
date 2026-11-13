@@ -75,6 +75,7 @@ function parse(html: string) {
   const facts = `${ogTitle} ${pageTitle} ${html.slice(0, 400000)}`;
   const guests = Number(facts.match(/(\d+)\s+guests?/i)?.[1]) || null;
   const bedrooms = /\bstudio\b/i.test(ogTitle) ? 0 : (Number(facts.match(/(\d+)\s+bedrooms?/i)?.[1]) || null);
+  const beds = Number(facts.match(/(\d+)\s+beds?\b/i)?.[1]) || null;
 
   const kind = (ogTitle + " " + pageTitle).toLowerCase();
   const type = /villa|house|home|bungalow|chalet/.test(kind) ? "villa"
@@ -95,7 +96,7 @@ function parse(html: string) {
   const og = meta(html, "og:image");
   if (!photos.length && og) photos.push(og.split("?")[0]);
 
-  return { title, description, guests, bedrooms, type, photos };
+  return { title, description, guests, bedrooms, beds, type, photos };
 }
 
 // Copie une photo Airbnb (taille 1200 px) dans le dossier de photos de l'hôte.
