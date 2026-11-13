@@ -43,7 +43,7 @@
       id: r.id, ownerId: r.owner_id, status: r.status,
       title: r.title || {}, description: r.description || {},
       area: r.area, type: r.type, guests: r.guests, bedrooms: r.bedrooms, beds: r.beds,
-      pricePerNight: r.price_night, pricePerMonth: r.price_month, currency: r.currency,
+      pricePerNight: r.price_night, pricePerWeek: r.price_week, pricePerMonth: r.price_month, currency: r.currency,
       pricesByGuests: r.price_by_guests || null,
       wifiMbps: r.wifi_mbps, amenities: r.amenities || [], photos: r.photos || [],
       hue: r.hue, verified: r.verified, featured: r.featured,
@@ -56,7 +56,7 @@
     return {
       title: l.title, description: l.description, area: l.area, type: l.type,
       guests: l.guests, bedrooms: l.bedrooms, beds: l.beds,
-      price_night: l.pricePerNight, price_month: l.pricePerMonth, currency: l.currency || "EGP",
+      price_night: l.pricePerNight, price_week: l.pricePerWeek, price_month: l.pricePerMonth, currency: l.currency || "EGP",
       price_by_guests: l.pricesByGuests || null,
       wifi_mbps: l.wifiMbps, amenities: l.amenities || [], photos: l.photos || [],
       hue: l.hue, host_name: l.host.name, host_whatsapp: l.host.whatsapp

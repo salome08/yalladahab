@@ -77,6 +77,7 @@ create table if not exists public.listings (
   beds int check (beds > 0),
   price_by_guests jsonb check (price_by_guests is null or jsonb_typeof(price_by_guests) = 'object'),
   price_night numeric check (price_night >= 0),
+  price_week numeric check (price_week >= 0),
   price_month numeric check (price_month >= 0),
   currency text not null default 'EGP' check (currency in ('EGP', 'USD')),
   wifi_mbps int check (wifi_mbps >= 0),

@@ -328,7 +328,7 @@
     function drawEditor(existing) {
       var l = existing || {
         title: {}, description: {}, area: "", type: "", guests: 2, bedrooms: 1, beds: null, currency: "EGP",
-        pricePerNight: null, pricePerMonth: null, wifiMbps: null, amenities: [], photos: [],
+        pricePerNight: null, pricePerWeek: null, pricePerMonth: null, wifiMbps: null, amenities: [], photos: [],
         hue: Math.floor(Math.random() * 360)
       };
       var photos = l.photos.slice();
@@ -364,6 +364,7 @@
           "<label>" + esc(t("editor.currency")) + '<select name="currency"><option value="EGP">EGP</option><option value="USD">USD ($)</option></select></label>' +
           "<label>" + esc(t("host.wifi")) + '<input name="wifi" type="number" min="0" value="' + esc(l.wifiMbps == null ? "" : l.wifiMbps) + '"></label>' +
           "<label>" + esc(t("host.priceNight")).replace("(EGP)", "") + '<input name="priceNight" type="number" min="0" value="' + esc(l.pricePerNight == null ? "" : l.pricePerNight) + '"></label>' +
+          "<label>" + esc(t("host.priceWeek")).replace("EGP, ", "") + '<input name="priceWeek" type="number" min="0" value="' + esc(l.pricePerWeek == null ? "" : l.pricePerWeek) + '"></label>' +
           "<label>" + esc(t("host.priceMonth")).replace("EGP, ", "") + '<input name="priceMonth" type="number" min="0" value="' + esc(l.pricePerMonth == null ? "" : l.pricePerMonth) + '"></label>' +
           // Prix selon le nombre de personnes : facultatif, replié par défaut.
           '<details class="full lang-extra" id="guest-prices"' + (l.pricesByGuests ? " open" : "") + "><summary>" + esc(t("editor.pricesByGuests")) + "</summary>" +
@@ -517,7 +518,7 @@
           area: f.area.value, type: f.type.value,
           guests: Number(f.guests.value), bedrooms: Number(f.bedrooms.value), beds: Number(f.beds.value),
           currency: f.currency.value,
-          pricePerNight: numberOrNull(f.priceNight.value), pricePerMonth: numberOrNull(f.priceMonth.value),
+          pricePerNight: numberOrNull(f.priceNight.value), pricePerWeek: numberOrNull(f.priceWeek.value), pricePerMonth: numberOrNull(f.priceMonth.value),
           pricesByGuests: collectGuestPrices(Number(f.guests.value), numberOrNull(f.priceNight.value)),
           wifiMbps: numberOrNull(f.wifi.value),
           amenities: Array.prototype.map.call(form.querySelectorAll('[name="amenities"]:checked'), function (c) { return c.value; }),

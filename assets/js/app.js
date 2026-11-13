@@ -125,6 +125,7 @@
     if (!night) return "<strong>" + esc(t("card.onRequest")) + "</strong>";
     return (guestPrices(l) ? esc(t("price.from")) + " " : "") +
       "<strong>" + money(night, l.currency) + "</strong> / " + esc(t("card.night")) +
+      (l.pricePerWeek ? ' <span class="muted">· ' + money(l.pricePerWeek, l.currency) + " / " + esc(t("card.week")) + "</span>" : "") +
       (l.pricePerMonth ? ' <span class="muted">· ' + money(l.pricePerMonth, l.currency) + " / " + esc(t("card.month")) + "</span>" : "");
   }
   function formatDate(iso, opts) {
@@ -343,11 +344,18 @@
       var area = form.elements.area.value;
       var type = form.elements.type.value;
       var monthly = form.elements.stay.value === "monthly";
+      var weekly = form.elements.stay.value === "weekly";
+      // À la semaine : le prix semaine de l'hôte, sinon 7 nuits.
+      function stayPrice(l) {
+        if (monthly) return l.pricePerMonth;
+        if (weekly) return l.pricePerWeek || (nightFrom(l) ? nightFrom(l) * 7 : null);
+        return nightFrom(l);
+      }
       var max = Number(form.elements.max.value) || 0;
       var workspace = form.elements.workspace.checked;
       var verified = form.elements.verified.checked;
       var results = LISTINGS.filter(function (l) {
-        var price = inEgp(monthly ? l.pricePerMonth : nightFrom(l), l.currency);
+        var price = inEgp(stayPrice(l), l.currency);
         var onRequest = !nightFrom(l);
         if (area && l.area !== area) return false;
         if (type && l.type !== type) return false;
@@ -357,7 +365,7 @@
         if (verified && !l.verified) return false;
         return true;
       });
-      function sortPrice(l) { return inEgp(monthly ? l.pricePerMonth : nightFrom(l), l.currency) || Infinity; }
+      function sortPrice(l) { return inEgp(stayPrice(l), l.currency) || Infinity; }
       results.sort(function (a, b) { return sortPrice(a) - sortPrice(b); });
       document.getElementById("results-count").textContent = t("listings.count", { n: results.length });
       document.getElementById("results").innerHTML = results.length
@@ -366,7 +374,7 @@
       var q = new URLSearchParams();
       if (area) q.set("area", area);
       if (type) q.set("type", type);
-      if (monthly) q.set("stay", "monthly");
+      if (monthly || weekly) q.set("stay", form.elements.stay.value);
       if (max) q.set("max", max);
       if (workspace) q.set("workspace", "1");
       if (verified) q.set("verified", "1");
