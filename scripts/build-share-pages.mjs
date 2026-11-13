@@ -36,6 +36,7 @@ function summary(l) {
   const table = l.price_by_guests && typeof l.price_by_guests === "object" ? Object.values(l.price_by_guests).map(Number).filter((n) => n > 0) : [];
   const night = table.length ? Math.min(...table, ...(l.price_night ? [l.price_night] : [])) : l.price_night;
   if (night) parts.push(`${table.length ? "from " : ""}${money(night, l.currency)} / night`);
+  if (l.price_week) parts.push(`${money(l.price_week, l.currency)} / week`);
   if (l.price_month) parts.push(`${money(l.price_month, l.currency)} / month`);
   return parts.join(" · ");
 }
