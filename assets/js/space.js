@@ -347,10 +347,10 @@
           // Import rapide : on colle le lien Airbnb et le formulaire se remplit.
           '<div class="full import-box"><strong>' + esc(t(existing ? "import.titleEdit" : "import.title")) + '</strong><p class="small muted">' + esc(t(existing ? "import.helpEdit" : "import.help")) + "</p>" +
             '<div class="import-row"><input type="url" id="import-url" placeholder="https://www.airbnb.com/rooms/…" inputmode="url">' +
-            '<button type="button" class="btn btn-coral" id="import-go">' + esc(t("import.button")) + "</button></div>" +
+            '<button type="button" class="btn" id="import-go">' + esc(t("import.button")) + "</button></div>" +
             '<span class="small muted" id="import-status"></span></div>' +
           // Admin : le contact affiché peut être celui d'un autre hôte.
-          (profile.is_admin ? '<div class="full import-box"><strong>' + esc(t("editor.hostTitle")) + '</strong><p class="small muted">' + esc(t("editor.hostHelp")) + "</p>" +
+          (profile.is_admin ? '<div class="full host-box"><strong>' + esc(t("editor.hostTitle")) + '</strong><p class="small muted">' + esc(t("editor.hostHelp")) + "</p>" +
             '<div class="host-fields"><label>' + esc(t("editor.hostName")) + '<input name="host_name" required value="' + esc(host.name || "") + '"></label>' +
             "<label>" + esc(t("editor.hostWhatsapp")) + '<input name="host_whatsapp" type="tel" required placeholder="+20 10 1234 5678" value="' + esc(host.whatsapp || "") + '"></label></div></div>' : "") +
           // Anglais demandé (compris par tous les voyageurs) ; le français est un plus, replié par défaut.
