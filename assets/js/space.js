@@ -6,7 +6,7 @@
   var YD = window.YD;
   var DB = window.YD_DB;
   var t = YD.t, esc = YD.esc, loc = YD.loc;
-  var MAX_PHOTOS = 12;
+  var MAX_PHOTOS = 30;
   var EVENT_CATEGORIES = ["party", "yoga", "diving", "market", "music", "workshop"];
 
   // ---------- Outils ----------

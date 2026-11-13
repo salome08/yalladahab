@@ -4,7 +4,7 @@
 // de photos, pour que l'annonce ne dépende pas d'Airbnb. Réservée aux comptes connectés.
 import { createClient } from "jsr:@supabase/supabase-js@2";
 
-const MAX_PHOTOS = 12;
+const MAX_PHOTOS = 30;
 const BUCKET = "listing-photos";
 const CORS = {
   "Access-Control-Allow-Origin": "*",
@@ -117,7 +117,7 @@ function amenities(html: string) {
   return [...found];
 }
 
-function parse(html: string) {
+function parse(html: string, roomId = "") {
   // <title> : « Nom de l'annonce - Appartements à louer à Dahab, … - Airbnb »
   const pageTitle = decode(html.match(/<title>([^<]*)<\/title>/i)?.[1] || "");
   let title = pageTitle.split(/\s+-\s+/)[0].trim();
@@ -144,15 +144,22 @@ function parse(html: string) {
     : /apartment|rental unit|condo|flat/.test(kind) ? "apartment" : "";
 
   // Photos de l'annonce (on écarte les photos de profil des hôtes et voyageurs).
+  // Les adresses n'ont pas toujours d'extension : on les compare par leur nom de fichier.
   const seen = new Set<string>();
-  const photos: string[] = [];
-  for (const m of html.matchAll(/https:\/\/a0\.muscache\.com\/im\/pictures\/[^"'\s\\?)]+\.(?:jpe?g|png|webp)/gi)) {
+  const all: string[] = [];
+  for (const m of html.matchAll(/https:\/\/a0\.muscache\.com\/im\/pictures\/[^"'\s\\?)]+/gi)) {
     const src = m[0];
-    if (/\/user\/|User-|\/profile|platform-assets|\/airbnb-/i.test(src) || seen.has(src)) continue;
-    seen.add(src);
-    photos.push(src);
-    if (photos.length >= MAX_PHOTOS) break;
+    if (/\/user\/|User-|\/profile|platform-assets|\/airbnb-|\.(?:svg|gif)$/i.test(src)) continue;
+    const key = src.split("/").pop()!.replace(/\.[a-z]+$/i, "");
+    if (seen.has(key)) continue;
+    seen.add(key);
+    all.push(src);
   }
+  // Les photos de l'annonce portent « Hosting-<numéro> » (ou ce numéro codé en base64) :
+  // on les préfère aux photos d'autres annonces affichées plus bas sur la page.
+  const tags = roomId ? [`Hosting-${roomId}/`, `Hosting-${btoa(`StaySupplyListing:${roomId}`).replace(/=+$/, "")}`] : [];
+  const own = all.filter((src) => tags.some((tag) => src.includes(tag)));
+  const photos = (own.length >= 3 ? own : all).slice(0, MAX_PHOTOS);
   const og = meta(html, "og:image");
   if (!photos.length && og) photos.push(og.split("?")[0]);
 
@@ -193,7 +200,7 @@ Deno.serve(async (req) => {
     },
   });
   if (!page.ok) return reply({ error: "airbnb_" + page.status }, 502);
-  const listing = parse(await page.text());
+  const listing = parse(await page.text(), room.split("/").pop());
   if (!listing.title && !listing.photos.length) return reply({ error: "nothing_found" }, 422);
 
   const copied = await Promise.all(listing.photos.map((src, i) => copyPhoto(auth.user.id, src, i)));
