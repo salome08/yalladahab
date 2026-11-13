@@ -570,3 +570,24 @@ body.db-on .demo-note { display: none; }
 .amenity-group { margin-top: 14px; }
 .amenity-group h3 { font-size: .95rem; margin: 0 0 8px; color: var(--muted); font-weight: 700; }
 .amenity-group .checks { margin-top: 0; }
+
+/* ---------- Statistiques (espace admin) ---------- */
+.stats-periods { margin-bottom: 8px; }
+.stat-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin: 16px 0 20px; }
+.stat-tile { background: var(--surface); border-radius: var(--radius); box-shadow: var(--shadow); padding: 16px; display: flex; flex-direction: column; gap: 2px; }
+.stat-tile strong { font-size: 1.9rem; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.stat-tile span { color: var(--muted); font-size: .9rem; }
+.stat-chart { margin: 0 0 28px; background: var(--surface); border-radius: var(--radius); box-shadow: var(--shadow); padding: 16px; }
+.stat-chart figcaption { font-weight: 700; margin-bottom: 12px; }
+.stat-bars { display: grid; grid-template-columns: repeat(var(--n), 1fr); gap: 2px; align-items: end; height: 160px; border-bottom: 1px solid var(--line); }
+.stat-bar { height: 100%; display: flex; align-items: flex-end; cursor: default; outline-offset: 2px; }
+.stat-bar span { display: block; width: 100%; min-height: 1px; background: var(--primary); border-radius: 4px 4px 0 0; }
+.stat-bar:hover span, .stat-bar:focus span { background: var(--ink); }
+.stat-axis { display: flex; justify-content: space-between; margin-top: 6px; }
+.table-wrap { overflow-x: auto; margin-bottom: 24px; }
+.stat-table { width: 100%; border-collapse: collapse; background: var(--surface); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); }
+.stat-table th, .stat-table td { padding: 10px 12px; text-align: start; border-bottom: 1px solid var(--line); }
+.stat-table th:not(:first-child), .stat-table td:not(:first-child) { text-align: end; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.stat-table th { font-size: .82rem; color: var(--muted); font-weight: 700; }
+.stat-table tr:last-child td { border-bottom: 0; }
+.listing-stats { margin: 6px 0 0; }
