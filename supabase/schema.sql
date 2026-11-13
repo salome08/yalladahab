@@ -74,6 +74,7 @@ create table if not exists public.listings (
   type text not null,
   guests int not null default 2 check (guests > 0),
   bedrooms int not null default 1 check (bedrooms >= 0),
+  beds int check (beds > 0),
   price_night numeric check (price_night >= 0),
   price_month numeric check (price_month >= 0),
   currency text not null default 'EGP' check (currency in ('EGP', 'USD')),

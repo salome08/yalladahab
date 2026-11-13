@@ -31,6 +31,7 @@ const safeId = (id) => /^[a-z0-9_-]+$/i.test(id);
 
 function summary(l) {
   const parts = [EN["type." + l.type] || l.type, `${l.guests} guests`];
+  if (l.beds > 0) parts.push(`${l.beds} bed${l.beds === 1 ? "" : "s"}`);
   if (l.price_night) parts.push(`${money(l.price_night, l.currency)} / night`);
   if (l.price_month) parts.push(`${money(l.price_month, l.currency)} / month`);
   return parts.join(" · ");

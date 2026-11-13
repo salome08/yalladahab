@@ -327,7 +327,7 @@
 
     function drawEditor(existing) {
       var l = existing || {
-        title: {}, description: {}, area: "", type: "", guests: 2, bedrooms: 1, currency: "EGP",
+        title: {}, description: {}, area: "", type: "", guests: 2, bedrooms: 1, beds: null, currency: "EGP",
         pricePerNight: null, pricePerMonth: null, wifiMbps: null, amenities: [], photos: [],
         hue: Math.floor(Math.random() * 360)
       };
@@ -360,6 +360,7 @@
           "<label>" + esc(t("search.type")) + '<select name="type" required>' + YD.optionList(YD.TYPES, "type.", "—") + "</select></label>" +
           "<label>" + esc(t("host.guests")) + '<input name="guests" type="number" min="1" required value="' + esc(l.guests) + '"></label>' +
           "<label>" + esc(t("host.bedrooms")) + '<input name="bedrooms" type="number" min="0" required value="' + esc(l.bedrooms) + '"></label>' +
+          "<label>" + esc(t("host.beds")) + '<input name="beds" type="number" min="1" required value="' + esc(l.beds == null ? "" : l.beds) + '"></label>' +
           "<label>" + esc(t("editor.currency")) + '<select name="currency"><option value="EGP">EGP</option><option value="USD">USD ($)</option></select></label>' +
           "<label>" + esc(t("host.wifi")) + '<input name="wifi" type="number" min="0" value="' + esc(l.wifiMbps == null ? "" : l.wifiMbps) + '"></label>' +
           "<label>" + esc(t("host.priceNight")).replace("(EGP)", "") + '<input name="priceNight" type="number" min="0" value="' + esc(l.pricePerNight == null ? "" : l.pricePerNight) + '"></label>' +
@@ -414,6 +415,7 @@
           if (r.description) f.description_en.value = r.description;
           if (r.guests) f.guests.value = r.guests;
           if (r.bedrooms != null) f.bedrooms.value = r.bedrooms;
+          if (r.beds) f.beds.value = r.beds;
           if (r.type && YD.TYPES.indexOf(r.type) !== -1) f.type.value = r.type;
           photos = photos.concat(r.photos || []).slice(0, MAX_PHOTOS);
           drawPhotos();
@@ -468,7 +470,7 @@
           id: existing && existing.id,
           title: text.title, description: text.description,
           area: f.area.value, type: f.type.value,
-          guests: Number(f.guests.value), bedrooms: Number(f.bedrooms.value),
+          guests: Number(f.guests.value), bedrooms: Number(f.bedrooms.value), beds: Number(f.beds.value),
           currency: f.currency.value,
           pricePerNight: numberOrNull(f.priceNight.value), pricePerMonth: numberOrNull(f.priceMonth.value),
           wifiMbps: numberOrNull(f.wifi.value),
@@ -565,7 +567,7 @@
       if (!list.length) { panel().innerHTML = '<p class="empty">' + esc(t("admin.noPending")) + "</p>"; return; }
       panel().innerHTML = list.map(function (l) {
         return '<article class="card review-card" data-id="' + esc(l.id) + '"><div class="card-body">' +
-          '<p class="card-meta">' + esc(t("area." + l.area)) + " · " + esc(t("type." + l.type)) + " · " + l.guests + " " + esc(t("card.guests")) + "</p>" +
+          '<p class="card-meta">' + esc(t("area." + l.area)) + " · " + esc(t("type." + l.type)) + " · " + l.guests + " " + esc(t("card.guests")) + YD.bedsText(l) + "</p>" +
           "<h3>" + YD.locHtml(l.title) + "</h3>" +
           (l.createdAt ? '<p class="small muted review-meta">' + esc(t("admin.submittedOn", { date: YD.formatDate(l.createdAt.slice(0, 10), { day: "numeric", month: "long", year: "numeric" }) })) + "</p>" : "") +
           "<p>" + YD.locHtml(l.description) + "</p>" +
