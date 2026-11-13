@@ -412,9 +412,9 @@
       '<div class="gallery">' + zoomable(photo(l.hue, t("type." + l.type), photoOf(l, 0)), 0) + zoomable(photo(l.hue + 25, "", photoOf(l, 1)), 1) + zoomable(photo(l.hue - 25, "", photoOf(l, 2)), 2) +
         (photos.length > 1 ? '<button type="button" class="gallery-all" data-photo="0"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z" fill="currentColor"/></svg> ' + esc(t("listing.allPhotos", { n: photos.length })) + "</button>" : "") +
       "</div>" +
-      (photos.length > 3 ? '<div class="more-photos">' + photos.slice(3).map(function (src, i) {
-        return '<img src="' + esc(src) + '" alt="" loading="lazy" onerror="this.remove()" data-photo="' + (i + 3) + '" tabindex="0" role="button" aria-label="' + esc(t("lightbox.open")) + '">';
-      }).join("") + "</div>" : "") +
+      // Les petites photos défilent dans un carrousel. Sur ordinateur il commence à la 4e photo
+      // (les 3 premières sont déjà en grand) ; sur téléphone, où seule la 1re est en grand, à la 2e.
+      (photos.length > 1 ? photoStrip(photos, 1, "more-photos", 3) : "") +
       '<div class="listing-layout">' +
         "<div>" +
           '<p class="card-meta">' + esc(t("area." + l.area)) + " · " + esc(t("type." + l.type)) + " · " + l.guests + " " + esc(t("card.guests")) +
@@ -471,6 +471,8 @@
       });
     }
 
+    refreshStrips(root);
+
     document.getElementById("copy-link").addEventListener("click", function (e) {
       var btn = e.target;
       var done = function () { btn.textContent = t("listing.copied"); };
@@ -478,6 +480,47 @@
       else window.prompt("", pageUrl);
     });
   }
+
+  // Carrousel de petites photos : une rangée qui défile (doigt, molette, flèches),
+  // et chaque photo s'ouvre en plein écran. `desktopFrom` : sur ordinateur, les photos
+  // avant cet index sont masquées (déjà affichées en grand au-dessus).
+  var CHEVRON = '<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M9 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  function photoStrip(photos, from, extraClass, desktopFrom) {
+    var items = "";
+    for (var i = from || 0; i < photos.length; i++) {
+      items += '<button type="button" class="strip-item' + (desktopFrom && i < desktopFrom ? " strip-mobile-only" : "") + '" data-photo="' + i + '" aria-label="' + esc(t("lightbox.open")) + " (" + esc(t("lightbox.count", { n: i + 1, total: photos.length })) + ')">' +
+        '<img src="' + esc(photos[i]) + '" alt="" loading="lazy" onerror="this.parentNode.remove()"></button>';
+    }
+    return '<div class="strip ' + (extraClass || "") + '" data-at-start="true">' +
+      '<button type="button" class="strip-nav strip-prev" data-strip-step="-1" tabindex="-1" aria-label="' + esc(t("lightbox.prev")) + '">' + CHEVRON + "</button>" +
+      '<div class="strip-track">' + items + "</div>" +
+      '<button type="button" class="strip-nav strip-next" data-strip-step="1" tabindex="-1" aria-label="' + esc(t("lightbox.next")) + '">' + CHEVRON + "</button></div>";
+  }
+  // Montre ou cache les flèches selon qu'on est au début / à la fin de la rangée.
+  function updateStrip(strip) {
+    var track = strip.querySelector(".strip-track");
+    if (!track) return;
+    var max = track.scrollWidth - track.clientWidth;
+    var pos = Math.abs(track.scrollLeft); // en arabe (RTL) scrollLeft est négatif
+    strip.dataset.atStart = String(pos <= 2);
+    strip.dataset.atEnd = String(pos >= max - 2);
+  }
+  function refreshStrips(root) {
+    Array.prototype.forEach.call((root || document).querySelectorAll(".strip"), updateStrip);
+  }
+  document.addEventListener("click", function (e) {
+    var nav = e.target.closest && e.target.closest("[data-strip-step]");
+    if (!nav) return;
+    var track = nav.parentNode.querySelector(".strip-track");
+    var rtl = getComputedStyle(track).direction === "rtl";
+    var step = Number(nav.dataset.stripStep) * Math.max(track.clientWidth * 0.8, 120);
+    track.scrollBy({ left: rtl ? -step : step, behavior: "smooth" });
+  });
+  // L'événement scroll ne remonte pas : on l'écoute en phase de capture.
+  document.addEventListener("scroll", function (e) {
+    if (e.target.classList && e.target.classList.contains("strip-track")) updateStrip(e.target.parentNode);
+  }, true);
+  window.addEventListener("resize", function () { refreshStrips(); });
 
   // Photos en plein écran : flèches, clavier (← → Échap), et glisser du doigt sur téléphone.
   // En arabe (de droite à gauche) le sens des flèches et du glissement est inversé.
@@ -632,7 +675,7 @@
 
   window.YD = {
     t: t, loc: loc, locHtml: locHtml, esc: esc, money: money, lang: function () { return lang; },
-    formatDate: formatDate, bedsText: bedsText, priceHtml: priceHtml, guestPricesHtml: guestPricesHtml, optionList: optionList, applyStaticTexts: applyStaticTexts,
+    formatDate: formatDate, photoStrip: photoStrip, refreshStrips: refreshStrips, openLightbox: openLightbox, bedsText: bedsText, priceHtml: priceHtml, guestPricesHtml: guestPricesHtml, optionList: optionList, applyStaticTexts: applyStaticTexts,
     AREAS: AREAS, TYPES: TYPES, AMENITIES: AMENITIES,
     registerPage: function (name, init) { PAGES[name] = init; PRIVATE_PAGES[name] = true; }
   };

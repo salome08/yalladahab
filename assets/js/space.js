@@ -626,13 +626,14 @@
           (l.createdAt ? '<p class="small muted review-meta">' + esc(t("admin.submittedOn", { date: YD.formatDate(l.createdAt.slice(0, 10), { day: "numeric", month: "long", year: "numeric" }) })) + "</p>" : "") +
           "<p>" + YD.locHtml(l.description) + "</p>" +
           '<p class="price">' + YD.priceHtml(l) + "</p>" + YD.guestPricesHtml(l) +
-          '<div class="thumbs">' + l.photos.map(function (src) { return '<img src="' + esc(src) + '" alt="">'; }).join("") + "</div>" +
+          (l.photos.length ? YD.photoStrip(l.photos, 0, "thumbs") : "") +
           '<p class="small">' + esc(t("listing.host", { name: l.host.name })) + ' · <a href="https://wa.me/' + esc(l.host.whatsapp) + '" target="_blank" rel="noopener">WhatsApp</a></p>' +
           '<div class="form-actions"><a class="btn btn-ghost" href="account.html?edit=' + encodeURIComponent(l.id) + '">' + esc(t("account.edit")) + "</a>" +
             '<button type="button" class="btn btn-ghost" data-set="rejected">' + esc(t("admin.reject")) + "</button>" +
             '<button type="button" class="btn" data-set="published">' + esc(t("admin.approve")) + "</button></div>" +
         "</div></article>";
       }).join("");
+      YD.refreshStrips(panel());
     }
 
     function drawToVisit() {
@@ -736,6 +737,12 @@
       var tab = e.target.closest("[data-tab]");
       if (tab) { state.tab = tab.dataset.tab; hideMessage(); draw(); return; }
       var card = e.target.closest("[data-id]");
+      var zoom = e.target.closest("[data-photo]");
+      if (zoom && card) {
+        var shown = state.listings.filter(function (x) { return x.id === card.dataset.id; })[0];
+        if (shown) YD.openLightbox(shown.photos, Number(zoom.dataset.photo), zoom);
+        return;
+      }
       var set = e.target.closest("[data-set]");
       if (set && card && state.tab === "pending") {
         DB.updateListing(card.dataset.id, { status: set.dataset.set }).then(function (saved) {
