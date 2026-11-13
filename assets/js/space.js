@@ -380,9 +380,12 @@
           // Prix selon le nombre de personnes : facultatif, replié par défaut.
           '<details class="full lang-extra" id="guest-prices"' + (l.pricesByGuests ? " open" : "") + "><summary>" + esc(t("editor.pricesByGuests")) + "</summary>" +
             '<div class="lang-extra-body"><p class="small muted">' + esc(t("editor.pricesByGuestsHelp")) + '</p><div class="guest-price-grid" id="guest-price-grid"></div></div></details>' +
-          '<div class="full"><label>' + esc(t("host.amenities")) + '</label><div class="checks">' + YD.AMENITIES.map(function (a) {
-            return '<label class="check"><input type="checkbox" name="amenities" value="' + a + '"' + (l.amenities.indexOf(a) !== -1 ? " checked" : "") + "> " + esc(t("amenity." + a)) + "</label>";
-          }).join("") + "</div>" +
+          // Équipements par catégorie.
+          '<div class="full"><label>' + esc(t("host.amenities")) + "</label>" + YD.AMENITY_GROUPS.map(function (g) {
+            return '<div class="amenity-group"><h3>' + esc(t("amenityGroup." + g.id)) + '</h3><div class="checks">' + g.items.map(function (a) {
+              return '<label class="check"><input type="checkbox" name="amenities" value="' + a + '"' + (l.amenities.indexOf(a) !== -1 ? " checked" : "") + "> " + esc(t("amenity." + a)) + "</label>";
+            }).join("") + "</div></div>";
+          }).join("") +
             // Vitesse internet : à côté des équipements (wifi).
             '<label class="wifi-field">' + esc(t("host.wifi")) + '<input name="wifi" type="number" min="0" value="' + esc(l.wifiMbps == null ? "" : l.wifiMbps) + '"></label></div>' +
           '<div class="full"><label>' + esc(t("editor.photos")) + '</label><p class="small muted">' + esc(t("editor.photosHelp")) + "</p>" +

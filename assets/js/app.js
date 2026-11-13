@@ -13,9 +13,15 @@
   var RTL_LANGS = ["ar"];
   var AREAS = ["blue-hole-road", "canyon", "eel-garden", "assala", "mashraba", "masbat", "lighthouse", "dahab-city", "mubarak", "zarnouk", "lagoon", "south-coast", "other-dahab", "near-dahab"];
   var TYPES = ["studio", "apartment", "villa", "room"];
-  var AMENITIES = ["wifi", "workspace", "seaView", "ac", "kitchen", "terrace", "garden", "washer",
-    "rooftop", "pool", "parking", "gearStorage", "backupPower", "beachAccess", "hammock", "pets", "selfCheckin",
-    "tv", "hotWater", "fridge", "microwave", "coffeeMaker", "kettle", "cookingBasics", "dishes", "bedLinens", "essentials", "hairDryer", "iron", "fan", "heating", "elevator", "bbq", "outdoorShower", "outdoorDining", "bathtub", "safe", "firstAid", "longStays", "luggage", "cleaning"];
+  // Équipements rangés par catégorie (formulaire et page annonce). Titres : clés amenityGroup.*
+  var AMENITY_GROUPS = [
+    { id: "essentials", items: ["wifi", "workspace", "ac", "fan", "heating", "hotWater", "backupPower", "tv", "bedLinens", "essentials", "safe", "firstAid"] },
+    { id: "kitchen", items: ["kitchen", "fridge", "microwave", "coffeeMaker", "kettle", "cookingBasics", "dishes"] },
+    { id: "bath", items: ["bathtub", "hairDryer", "washer", "iron"] },
+    { id: "outdoor", items: ["seaView", "beachAccess", "terrace", "rooftop", "garden", "pool", "hammock", "bbq", "outdoorShower", "outdoorDining"] },
+    { id: "building", items: ["parking", "elevator", "gearStorage", "selfCheckin", "luggage", "cleaning", "longStays", "pets"] }
+  ];
+  var AMENITIES = AMENITY_GROUPS.reduce(function (all, g) { return all.concat(g.items); }, []);
   var AD_PRICES = { home: 1500, search: 800, event: 300 };
 
   // ---------- Langue ----------
@@ -388,6 +394,17 @@
     renderBanners("search");
   }
 
+  // Équipements de l'annonce, par catégorie (seulement les catégories remplies).
+  function amenitiesHtml(list) {
+    var html = AMENITY_GROUPS.map(function (g) {
+      var items = g.items.filter(function (a) { return list.indexOf(a) !== -1; });
+      if (!items.length) return "";
+      return '<div class="amenity-group"><h3>' + esc(t("amenityGroup." + g.id)) + '</h3><ul class="amenities">' +
+        items.map(function (a) { return "<li>" + esc(t("amenity." + a)) + "</li>"; }).join("") + "</ul></div>";
+    }).join("");
+    return html;
+  }
+
   function initListing() {
     // stay/<id>.html (page de partage) donne l'id dans la page ; listing.html?id=… dans l'adresse.
     var id = document.body.dataset.listingId || new URLSearchParams(window.location.search).get("id");
@@ -424,7 +441,7 @@
           '<p class="lead">' + locHtml(l.description) + "</p>" +
           (l.wifiMbps ? '<p class="wifi-pill">📶 ' + esc(t("listing.wifiTested", { n: l.wifiMbps })) + "</p>" : "") +
           "<h2>" + esc(t("listing.amenities")) + "</h2>" +
-          '<ul class="amenities">' + l.amenities.map(function (a) { return "<li>" + esc(t("amenity." + a)) + "</li>"; }).join("") + "</ul>" +
+          amenitiesHtml(l.amenities) +
           '<p><a href="https://maps.google.com/?q=' + encodeURIComponent((l.area === "near-dahab" || l.area === "other-dahab" ? "" : t("area." + l.area) + ", ") + "Dahab, Egypt") + '" target="_blank" rel="noopener">📍 ' + esc(t("listing.map")) + "</a></p>" +
         "</div>" +
         '<aside class="contact-box">' +
@@ -676,7 +693,7 @@
   window.YD = {
     t: t, loc: loc, locHtml: locHtml, esc: esc, money: money, lang: function () { return lang; },
     formatDate: formatDate, photoStrip: photoStrip, refreshStrips: refreshStrips, openLightbox: openLightbox, bedsText: bedsText, priceHtml: priceHtml, guestPricesHtml: guestPricesHtml, optionList: optionList, applyStaticTexts: applyStaticTexts,
-    AREAS: AREAS, TYPES: TYPES, AMENITIES: AMENITIES,
+    AREAS: AREAS, TYPES: TYPES, AMENITIES: AMENITIES, AMENITY_GROUPS: AMENITY_GROUPS,
     registerPage: function (name, init) { PAGES[name] = init; PRIVATE_PAGES[name] = true; }
   };
 
