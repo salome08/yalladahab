@@ -36,6 +36,8 @@
   // Sur téléphone : bouton Liste / Carte. Sur ordinateur : la carte reste au-dessus de la liste.
   function setView(view) {
     document.body.classList.toggle("view-map", view === "map");
+    // On garde Liste / Carte pour le retour depuis une annonce.
+    try { window.sessionStorage.setItem("yd-view", view); } catch (e) {}
     toggle.querySelectorAll("button").forEach(function (b) {
       b.setAttribute("aria-pressed", b.dataset.view === view ? "true" : "false");
     });
@@ -171,7 +173,9 @@
     window.matchMedia("(max-width: 860px)").addEventListener("change", function () {
       setView(document.body.classList.contains("view-map") ? "map" : "list");
     });
-    setView("list");
+    var savedView = null;
+    try { savedView = window.sessionStorage.getItem("yd-view"); } catch (e) {}
+    setView(savedView === "map" ? "map" : "list");
   });
 
   document.addEventListener("yd:results", function (e) {
