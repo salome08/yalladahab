@@ -33,6 +33,8 @@ Ces règles sont appliquées par la base elle-même (`supabase/schema.sql`), pas
 
 Chaque annonce en ligne a une page `stay/<id>.html` (adresse `yalladahab.com/stay/<id>`) avec sa photo, son titre et son prix dans les balises d'aperçu : c'est ce lien que partagent les boutons WhatsApp, Facebook et « Copier le lien ». Ces pages sont créées par `scripts/build-share-pages.mjs`, lancé toutes les 30 minutes par `.github/workflows/share-pages.yml` (ou à la main : onglet **Actions** → **Pages de partage** → **Run workflow**). Une annonce toute nouvelle dont la page n'existe pas encore est redirigée vers sa fiche par `404.html`.
 
+L'image d'aperçu de chaque annonce (`stay/img/<id>-<code>.jpg`, 1200 × 630) est dessinée par `scripts/share-images.mjs` : la 1re photo en grand, 4 autres en miniatures et un bandeau vert sauge avec le logo, le titre, le quartier et le prix. Elle n'est refaite que si les photos, le titre ou le prix changent, et son nom change alors, ce qui oblige Facebook à prendre la nouvelle. Pour changer le dessin, modifier `DESIGN` dans ce fichier (v1 → v2) pour que toutes les images soient refaites.
+
 ## Modifier le contenu sans base de données
 
 Tant que Supabase n'est pas configuré, tout le contenu se trouve dans trois fichiers simples :
