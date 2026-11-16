@@ -222,6 +222,11 @@ input:hover, select:hover, textarea:hover { border-color: var(--muted); }
 textarea { min-height: 120px; resize: vertical; }
 input:focus, select:focus, textarea:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 4px var(--primary-soft); }
 input[type="checkbox"], input[type="radio"] { accent-color: var(--primary); width: 18px; height: 18px; min-height: 0; }
+/* iOS Safari gives date inputs a wide built-in minimum width and ignores width:100%,
+   which made the Arrivée / Départ fields overflow the booking card on iPhone. */
+input[type="date"] { -webkit-appearance: none; appearance: none; min-width: 0; max-width: 100%; text-align: start; line-height: 1.3; }
+input[type="date"]::-webkit-date-and-time-value { text-align: start; margin: 0; }
+input[type="date"]::-webkit-datetime-edit { padding: 0; }
 label.check { display: flex; align-items: center; gap: 10px; font-weight: 600; color: var(--ink); cursor: pointer; }
 label.check input { width: 18px; margin: 0; box-shadow: none; }
 
@@ -398,7 +403,8 @@ body.lb-open { overflow: hidden; }
 .contact-box { background: var(--surface); border: 1px solid var(--line); border-radius: 22px; box-shadow: var(--shadow-hover); padding: 24px; position: sticky; top: 88px; display: grid; gap: 14px; }
 .contact-box .price { margin: 0; font-size: 1.05rem; }
 .contact-box .price strong { font-size: 1.5rem; }
-.date-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.date-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px; }
+.date-row label { min-width: 0; }
 .share { display: flex; flex-wrap: wrap; gap: 6px 14px; border-top: 1px solid var(--line); padding-top: 14px; font-size: .9rem; }
 .share strong { width: 100%; }
 
