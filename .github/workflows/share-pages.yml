@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
   push:
     branches: [main]
-    paths: [listing.html, scripts/build-share-pages.mjs, assets/js/i18n.js]
+    paths: [listing.html, scripts/build-share-pages.mjs, scripts/share-images.mjs, assets/js/i18n.js]
 
 permissions:
   contents: write
@@ -25,7 +25,12 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
+      # Chrome est déjà installé sur les machines de GitHub ; playwright-core sert à le piloter
+      # pour dessiner les images d'aperçu (grande photo + miniatures + bandeau vert sauge).
+      - run: npm install --no-save --no-package-lock playwright-core@1.63.0
       - run: node scripts/build-share-pages.mjs
+        env:
+          CHROME_PATH: /usr/bin/google-chrome
       - name: Enregistrer les changements
         run: |
           git add -A stay
