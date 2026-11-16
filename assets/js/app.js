@@ -412,17 +412,19 @@
       var max = Number(form.elements.max.value) || 0;
       var features = FEATURE_FILTERS.filter(function (f) { return form.elements[f.key].checked; });
       var verified = form.elements.verified.checked;
-      var results = LISTINGS.filter(function (l) {
+      // anyArea : même filtre sans le quartier (la carte compte les logements de chaque quartier).
+      function matches(l, anyArea) {
         var price = inEgp(stayPrice(l), l.currency);
         var onRequest = !nightFrom(l);
-        if (area && l.area !== area) return false;
+        if (area && !anyArea && l.area !== area) return false;
         if (type && l.type !== type) return false;
         if (monthly && !l.pricePerMonth && !onRequest) return false;
         if (max && !onRequest && price > max) return false;
         if (!features.every(function (f) { return f.test(l); })) return false;
         if (verified && !l.verified) return false;
         return true;
-      });
+      }
+      var results = LISTINGS.filter(function (l) { return matches(l); });
       function sortPrice(l) { return inEgp(stayPrice(l), l.currency) || Infinity; }
       results.sort(function (a, b) { return sortPrice(a) - sortPrice(b); });
       document.getElementById("results-count").textContent = t("listings.count", { n: results.length });
@@ -438,6 +440,8 @@
       if (verified) q.set("verified", "1");
       var qs = q.toString();
       window.history.replaceState(null, "", qs ? "?" + qs : window.location.pathname);
+      // Carte des quartiers (assets/js/map.js).
+      document.dispatchEvent(new CustomEvent("yd:results", { detail: { area: area, results: results, anyArea: LISTINGS.filter(function (l) { return matches(l, true); }) } }));
     }
     form.addEventListener("input", update);
     form.addEventListener("submit", function (e) { e.preventDefault(); update(); });
