@@ -18,8 +18,17 @@
     { id: "essentials", items: ["wifi", "workspace", "ac", "fan", "heating", "hotWater", "backupPower", "tv", "bedLinens", "essentials", "safe", "firstAid"] },
     { id: "kitchen", items: ["kitchen", "fridge", "microwave", "coffeeMaker", "kettle", "cookingBasics", "dishes"] },
     { id: "bath", items: ["bathtub", "hairDryer", "washer", "iron"] },
-    { id: "outdoor", items: ["seaView", "beachAccess", "terrace", "rooftop", "garden", "pool", "hammock", "bbq", "outdoorShower", "outdoorDining"] },
+    { id: "outdoor", items: ["beachfront", "seaView", "beachAccess", "terrace", "rooftop", "garden", "pool", "hammock", "bbq", "outdoorShower", "outdoorDining"] },
     { id: "building", items: ["parking", "elevator", "gearStorage", "selfCheckin", "luggage", "cleaning", "longStays", "pets"] }
+  ];
+  // Filtres « je cherche » de la page logements : clé d'URL → test sur l'annonce.
+  function hasAny(l, list) { return list.some(function (a) { return (l.amenities || []).indexOf(a) !== -1; }); }
+  var FEATURE_FILTERS = [
+    { key: "beach", test: function (l) { return hasAny(l, ["beachfront", "beachAccess"]); } },
+    { key: "seaview", test: function (l) { return hasAny(l, ["seaView"]); } },
+    { key: "rooftop", test: function (l) { return hasAny(l, ["rooftop"]); } },
+    { key: "workspace", test: function (l) { return hasAny(l, ["workspace"]) || l.wifiMbps >= 50; } },
+    { key: "pets", test: function (l) { return hasAny(l, ["pets"]); } }
   ];
   var AMENITIES = AMENITY_GROUPS.reduce(function (all, g) { return all.concat(g.items); }, []);
   var AD_PRICES = { home: 1500, search: 800, event: 300 };
@@ -366,6 +375,11 @@
     var form = document.getElementById("hero-search");
     fillSearchSelects(form);
     var featured = LISTINGS.filter(function (l) { return l.featured; }).slice(0, 3);
+    var quick = document.getElementById("quick-filters");
+    if (quick) {
+      quick.innerHTML = [["beach=1", "filter.beach"], ["seaview=1", "filter.seaview"], ["rooftop=1", "filter.rooftop"], ["stay=monthly", "filter.monthly"], ["pets=1", "filter.pets"]]
+        .map(function (q) { return '<a href="listings.html?' + q[0] + '">' + esc(t(q[1])) + "</a>"; }).join("");
+    }
     document.getElementById("featured-listings").innerHTML = featured.map(listingCard).join("");
     document.getElementById("home-events").innerHTML = upcomingEvents().slice(0, 3).map(eventCard).join("");
     renderBanners("home");
@@ -378,7 +392,10 @@
     ["area", "type", "stay", "max"].forEach(function (k) {
       if (params.get(k)) form.elements[k].value = params.get(k);
     });
-    form.elements.workspace.checked = params.get("workspace") === "1";
+    document.getElementById("feature-filters").innerHTML = FEATURE_FILTERS.map(function (f) {
+      return '<label class="chip"><input type="checkbox" name="' + f.key + '"' + (params.get(f.key) === "1" ? " checked" : "") +
+        "><span>" + esc(t("filter." + f.key)) + "</span></label>";
+    }).join("");
     form.elements.verified.checked = params.get("verified") === "1";
 
     function update() {
@@ -393,7 +410,7 @@
         return nightFrom(l);
       }
       var max = Number(form.elements.max.value) || 0;
-      var workspace = form.elements.workspace.checked;
+      var features = FEATURE_FILTERS.filter(function (f) { return form.elements[f.key].checked; });
       var verified = form.elements.verified.checked;
       var results = LISTINGS.filter(function (l) {
         var price = inEgp(stayPrice(l), l.currency);
@@ -402,7 +419,7 @@
         if (type && l.type !== type) return false;
         if (monthly && !l.pricePerMonth && !onRequest) return false;
         if (max && !onRequest && price > max) return false;
-        if (workspace && !(l.amenities.indexOf("workspace") !== -1 || l.wifiMbps >= 50)) return false;
+        if (!features.every(function (f) { return f.test(l); })) return false;
         if (verified && !l.verified) return false;
         return true;
       });
@@ -417,7 +434,7 @@
       if (type) q.set("type", type);
       if (monthly || weekly) q.set("stay", form.elements.stay.value);
       if (max) q.set("max", max);
-      if (workspace) q.set("workspace", "1");
+      features.forEach(function (f) { q.set(f.key, "1"); });
       if (verified) q.set("verified", "1");
       var qs = q.toString();
       window.history.replaceState(null, "", qs ? "?" + qs : window.location.pathname);
