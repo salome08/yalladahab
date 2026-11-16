@@ -24,7 +24,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
-  <link rel="stylesheet" href="assets/css/style.css?v=20261116f">
+  <link rel="stylesheet" href="assets/vendor/leaflet/leaflet.css?v=1.9.4">
+  <link rel="stylesheet" href="assets/css/style.css?v=20261116n">
   <script>try{var t=localStorage.getItem("yd-theme");if(t==="dark"||t==="light")document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
 </head>
 <body data-page="listings">
@@ -47,19 +48,31 @@
       <div class="filter-actions"><button class="btn btn-ghost" type="reset" data-i18n="search.reset"></button></div>
     </form>
     <section>
-      <p class="muted" id="results-count"></p>
+      <div class="results-bar">
+        <p class="muted" id="results-count"></p>
+        <div class="view-toggle" id="view-toggle" role="group">
+          <button type="button" data-view="list" aria-pressed="true"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" fill="none"/></svg> <span data-i18n="map.list"></span></button>
+          <button type="button" data-view="map" aria-pressed="false"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M12 22s7-6.2 7-12a7 7 0 1 0-14 0c0 5.8 7 12 7 12z" stroke="currentColor" stroke-width="2.2" fill="none"/><circle cx="12" cy="10" r="2.6" fill="currentColor"/></svg> <span data-i18n="map.map"></span></button>
+        </div>
+      </div>
+      <div class="area-map-wrap" id="area-map-wrap">
+        <div class="area-map" id="area-map"></div>
+        <p class="map-note muted" id="map-note"></p>
+      </div>
       <div class="grid" id="results"></div>
     </section>
   </div>
 </div>
 </main>
 <footer id="site-footer"></footer>
-<script src="assets/js/config.js?v=20261116f"></script>
-<script src="assets/js/i18n.js?v=20261116f"></script>
-<script src="assets/data/listings.js?v=20261116f"></script>
-<script src="assets/data/events.js?v=20261116f"></script>
-<script src="assets/data/ads.js?v=20261116f"></script>
-<script src="assets/js/db.js?v=20261116f"></script>
-<script src="assets/js/app.js?v=20261116f"></script>
+<script src="assets/js/config.js?v=20261116n"></script>
+<script src="assets/js/i18n.js?v=20261116n"></script>
+<script src="assets/data/listings.js?v=20261116n"></script>
+<script src="assets/data/events.js?v=20261116n"></script>
+<script src="assets/data/ads.js?v=20261116n"></script>
+<script src="assets/js/db.js?v=20261116n"></script>
+<script src="assets/js/app.js?v=20261116n"></script>
+<script src="assets/vendor/leaflet/leaflet.js?v=1.9.4"></script>
+<script src="assets/js/map.js?v=20261116n"></script>
 </body>
 </html>

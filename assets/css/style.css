@@ -324,6 +324,49 @@ a.banner-empty:hover { color: var(--muted); border-color: var(--primary); box-sh
 .filter-actions { display: flex; gap: 8px; }
 .filter-actions .btn { flex: 1; }
 
+/* Carte des quartiers (assets/js/map.js) */
+.results-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
+.results-bar #results-count { margin: 0; }
+.view-toggle { display: none; background: var(--surface); border: 1px solid var(--line); border-radius: 999px; padding: 3px; box-shadow: var(--shadow); }
+.view-toggle button { display: inline-flex; align-items: center; gap: 6px; border: 0; background: none; color: var(--muted); font: inherit; font-weight: 700; font-size: .9rem; padding: 7px 14px; border-radius: 999px; cursor: pointer; min-height: 36px; }
+.view-toggle button[aria-pressed="true"] { background: var(--primary); color: var(--on-primary); }
+.area-map-wrap { margin-bottom: 22px; }
+.area-map { height: 340px; border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); background: var(--surface-2); border: 1px solid var(--line); z-index: 0; }
+.map-note { font-size: .85rem; margin: 8px 2px 0; display: flex; flex-wrap: wrap; gap: 4px 12px; }
+.area-map .leaflet-tile-pane { filter: saturate(.7) sepia(.08); }
+:root[data-theme="dark"] .area-map .leaflet-tile-pane { filter: invert(1) hue-rotate(180deg) brightness(.85) contrast(.9) saturate(.45); }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .area-map .leaflet-tile-pane { filter: invert(1) hue-rotate(180deg) brightness(.85) contrast(.9) saturate(.45); }
+}
+.area-map .leaflet-container, .area-map.leaflet-container { font: inherit; }
+.map-pin-wrap { background: none; border: 0; }
+.map-pin { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 50%; background: var(--primary); color: var(--on-primary); border: 3px solid var(--surface); box-shadow: 0 3px 10px rgba(0, 0, 0, .28); font-size: .95rem; transition: transform .15s var(--ease); cursor: pointer; }
+.map-pin b { font-weight: 800; }
+.map-pin:hover { transform: scale(1.1); }
+.map-pin.is-empty { width: 26px; height: 26px; margin: 7px; font-size: .75rem; background: var(--surface-2); color: var(--muted); border-width: 2px; }
+.map-pin.is-selected { background: var(--accent); color: var(--on-accent); transform: scale(1.18); }
+.area-map .map-tip { background: var(--surface); color: var(--ink); border: 0; border-radius: 8px; box-shadow: var(--shadow); font-weight: 700; padding: 4px 10px; }
+.area-map .map-tip::before { display: none; }
+.area-map .leaflet-popup-content-wrapper, .area-map .leaflet-popup-tip { background: var(--surface); color: var(--ink); box-shadow: var(--shadow-hover); }
+.area-map .leaflet-popup-content-wrapper { border-radius: 14px; }
+.area-map .leaflet-popup-content { margin: 14px 18px; }
+.area-map .leaflet-container a.leaflet-popup-close-button, .area-map a.leaflet-popup-close-button { color: var(--muted); }
+.map-popup strong { display: block; font-size: 1rem; }
+.map-popup p { margin: 4px 0 10px; }
+.map-popup .btn { width: 100%; color: var(--on-primary); }
+.map-all { background: var(--surface); color: var(--ink); border: 1px solid var(--line); border-radius: 999px; padding: 7px 14px; font: inherit; font-weight: 700; font-size: .85rem; box-shadow: var(--shadow); cursor: pointer; }
+.map-all:hover { background: var(--primary-soft); }
+.area-map .leaflet-bar a { background: var(--surface); color: var(--ink); border-color: var(--line); }
+.area-map .leaflet-control-attribution { background: var(--photo-chip); color: var(--muted); }
+.area-map .leaflet-control-attribution a { color: var(--primary); }
+@media (max-width: 860px) {
+  .view-toggle { display: inline-flex; }
+  .area-map-wrap { display: none; }
+  .view-map .area-map-wrap { display: block; }
+  .view-map #results { display: none; }
+  .area-map { height: 62vh; min-height: 340px; }
+}
+
 /* Fiche logement */
 .back { display: inline-flex; align-items: center; margin: 22px 0 14px; text-decoration: none; font-weight: 600; }
 .gallery { display: grid; grid-template-columns: 2fr 1fr; grid-template-rows: 1fr 1fr; gap: 10px; border-radius: 22px; overflow: hidden; }

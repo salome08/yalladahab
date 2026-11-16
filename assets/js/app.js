@@ -33,6 +33,13 @@
   var AMENITIES = AMENITY_GROUPS.reduce(function (all, g) { return all.concat(g.items); }, []);
   var AD_PRICES = { home: 1500, search: 800, event: 300 };
 
+  // Dernière recherche (filtres) de l'onglet, pour y revenir depuis une annonce ou le menu.
+  function searchUrl() {
+    var qs = "";
+    try { qs = window.sessionStorage.getItem("yd-search") || ""; } catch (e) {}
+    return "listings.html" + (qs ? "?" + qs : "");
+  }
+
   // ---------- Langue ----------
 
   function storageGet(key) {
@@ -220,7 +227,7 @@
   function renderChrome() {
     var page = document.body.dataset.page;
     var links = [
-      ["listings", "listings.html", "nav.listings"],
+      ["listings", searchUrl(), "nav.listings"],
       ["events", "events.html", "nav.events"],
       ["advertise", "advertise.html", "nav.advertise"]
     ];
@@ -412,17 +419,19 @@
       var max = Number(form.elements.max.value) || 0;
       var features = FEATURE_FILTERS.filter(function (f) { return form.elements[f.key].checked; });
       var verified = form.elements.verified.checked;
-      var results = LISTINGS.filter(function (l) {
+      // anyArea : même filtre sans le quartier (la carte compte les logements de chaque quartier).
+      function matches(l, anyArea) {
         var price = inEgp(stayPrice(l), l.currency);
         var onRequest = !nightFrom(l);
-        if (area && l.area !== area) return false;
+        if (area && !anyArea && l.area !== area) return false;
         if (type && l.type !== type) return false;
         if (monthly && !l.pricePerMonth && !onRequest) return false;
         if (max && !onRequest && price > max) return false;
         if (!features.every(function (f) { return f.test(l); })) return false;
         if (verified && !l.verified) return false;
         return true;
-      });
+      }
+      var results = LISTINGS.filter(function (l) { return matches(l); });
       function sortPrice(l) { return inEgp(stayPrice(l), l.currency) || Infinity; }
       results.sort(function (a, b) { return sortPrice(a) - sortPrice(b); });
       document.getElementById("results-count").textContent = t("listings.count", { n: results.length });
@@ -438,6 +447,9 @@
       if (verified) q.set("verified", "1");
       var qs = q.toString();
       window.history.replaceState(null, "", qs ? "?" + qs : window.location.pathname);
+      try { window.sessionStorage.setItem("yd-search", qs); } catch (e) {}
+      // Carte des quartiers (assets/js/map.js).
+      document.dispatchEvent(new CustomEvent("yd:results", { detail: { area: area, results: results, anyArea: LISTINGS.filter(function (l) { return matches(l, true); }) } }));
     }
     form.addEventListener("input", update);
     form.addEventListener("submit", function (e) { e.preventDefault(); update(); });
@@ -482,7 +494,7 @@
     }
 
     root.innerHTML =
-      '<a class="back" href="listings.html"><span class="arrow">←</span> ' + esc(t("listing.back")) + "</a>" +
+      '<a class="back" href="' + esc(searchUrl()) + '"><span class="arrow">←</span> ' + esc(t("listing.back")) + "</a>" +
       '<div class="gallery">' + zoomable(photo(l.hue, t("type." + l.type), photoOf(l, 0)), 0) + zoomable(photo(l.hue + 25, "", photoOf(l, 1)), 1) + zoomable(photo(l.hue - 25, "", photoOf(l, 2)), 2) +
         (photos.length > 1 ? '<button type="button" class="gallery-all" data-photo="0"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z" fill="currentColor"/></svg> ' + esc(t("listing.allPhotos", { n: photos.length })) + "</button>" : "") +
       "</div>" +
