@@ -71,6 +71,7 @@ const AMENITY_RULES: [string, RegExp][] = [
   ["washer", /washer|washing machine/i],
   ["rooftop", /rooftop/i],
   ["pool", /\bpool\b(?! table)/i],
+  ["heatedPool", /heated[^,]*\bpool\b|\bpool\b[^,]*heated/i],
   ["parking", /parking/i],
   ["beachfront", /beachfront|waterfront/i],
   ["beachAccess", /beach access/i],
