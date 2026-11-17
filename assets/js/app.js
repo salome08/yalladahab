@@ -18,7 +18,7 @@
     { id: "essentials", items: ["wifi", "workspace", "ac", "fan", "heating", "hotWater", "backupPower", "tv", "bedLinens", "essentials", "safe", "firstAid"] },
     { id: "kitchen", items: ["kitchen", "fridge", "microwave", "coffeeMaker", "kettle", "cookingBasics", "dishes"] },
     { id: "bath", items: ["bathtub", "hairDryer", "washer", "iron"] },
-    { id: "outdoor", items: ["beachfront", "seaView", "beachAccess", "terrace", "rooftop", "garden", "pool", "hammock", "bbq", "outdoorShower", "outdoorDining"] },
+    { id: "outdoor", items: ["beachfront", "seaView", "beachAccess", "terrace", "rooftop", "garden", "pool", "heatedPool", "hammock", "bbq", "outdoorShower", "outdoorDining"] },
     { id: "building", items: ["parking", "elevator", "gearStorage", "selfCheckin", "luggage", "cleaning", "longStays", "pets"] }
   ];
   // Filtres « je cherche » de la page logements : clé d'URL → test sur l'annonce.
