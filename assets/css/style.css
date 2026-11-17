@@ -621,11 +621,17 @@ body.db-on .demo-note { display: none; }
 /* Formulaire d'annonce : lignes de champs (capacité, prix) */
 .field-row { display: grid; gap: 16px; align-items: end; }
 .field-row-3 { grid-template-columns: repeat(3, 1fr); }
-.field-row-prices { grid-template-columns: 1fr 1fr 1fr minmax(110px, .7fr); }
+.field-row-prices { grid-template-columns: minmax(110px, .7fr) 1fr 1fr 1fr; }
 .field-group { border: 0; margin: 0; padding: 0; min-width: 0; }
 .field-group legend { font-weight: 700; padding: 0; margin-bottom: 10px; }
 .wifi-field { display: block; margin-top: 14px; max-width: 320px; }
-@media (max-width: 720px) { .field-row-prices { grid-template-columns: 1fr 1fr; } }
+/* Téléphone : devise (étroite) + prix par nuit sur la 1re ligne, semaine + mois sur la 2e. */
+@media (max-width: 720px) {
+  .field-row-prices { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+  .field-row-prices > label:nth-child(1) { grid-column: span 2; }
+  .field-row-prices > label:nth-child(2) { grid-column: span 4; }
+  .field-row-prices > label:nth-child(n+3) { grid-column: span 3; }
+}
 @media (max-width: 560px) { .field-row-3 { grid-template-columns: 1fr 1fr 1fr; gap: 10px; } }
 
 /* Équipements par catégorie */

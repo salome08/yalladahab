@@ -383,12 +383,12 @@
           "<label>" + esc(t("host.bedrooms")) + '<input name="bedrooms" type="number" min="0" required value="' + esc(l.bedrooms) + '"></label>' +
           "<label>" + esc(t("host.beds")) + '<input name="beds" type="number" min="1" required value="' + esc(l.beds == null ? "" : l.beds) + '"></label>' +
           "</div>" +
-          // Prix : nuit, semaine, mois et devise côte à côte.
+          // Prix : devise d'abord, puis nuit (même ligne), semaine et mois.
           '<fieldset class="full field-group"><legend>' + esc(t("editor.pricesTitle")) + '</legend><div class="field-row field-row-prices">' +
+          "<label>" + esc(t("editor.currency")) + '<select name="currency"><option value="EGP">EGP</option><option value="USD">USD ($)</option></select></label>' +
           "<label>" + esc(t("host.priceNight")).replace("(EGP)", "") + '<input name="priceNight" type="number" min="0" value="' + esc(l.pricePerNight == null ? "" : l.pricePerNight) + '"></label>' +
           "<label>" + esc(t("host.priceWeek")).replace("EGP, ", "") + '<input name="priceWeek" type="number" min="0" value="' + esc(l.pricePerWeek == null ? "" : l.pricePerWeek) + '"></label>' +
           "<label>" + esc(t("host.priceMonth")).replace("EGP, ", "") + '<input name="priceMonth" type="number" min="0" value="' + esc(l.pricePerMonth == null ? "" : l.pricePerMonth) + '"></label>' +
-          "<label>" + esc(t("editor.currency")) + '<select name="currency"><option value="EGP">EGP</option><option value="USD">USD ($)</option></select></label>' +
           "</div></fieldset>" +
           // Prix selon le nombre de personnes : facultatif, replié par défaut.
           '<details class="full lang-extra" id="guest-prices"' + (l.pricesByGuests ? " open" : "") + "><summary>" + esc(t("editor.pricesByGuests")) + "</summary>" +
