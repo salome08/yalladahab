@@ -659,3 +659,10 @@ body.db-on .demo-note { display: none; }
 .stat-table th { font-size: .82rem; color: var(--muted); font-weight: 700; }
 .stat-table tr:last-child td { border-bottom: 0; }
 .listing-stats { margin: 6px 0 0; }
+
+/* Localisation approximative (import Airbnb) : case dans le formulaire, épingle d'un logement sur la carte. */
+.location-box { background: var(--surface-2); border: 1.5px solid var(--line); border-radius: var(--radius-sm); padding: 14px 18px; }
+.location-box p { margin: 6px 0 0; }
+.location-box label.check:has(input:disabled) { opacity: .6; cursor: default; }
+.map-pin.map-pin-point { width: 30px; height: 30px; border-width: 2px; background: var(--accent); color: var(--on-accent); }
+.map-pin.map-pin-point.is-selected { background: var(--primary); color: var(--on-primary); }

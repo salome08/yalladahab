@@ -4,25 +4,10 @@
 (function () {
   "use strict";
 
-  // Position approximative du centre de chaque quartier [latitude, longitude].
-  // Pour déplacer une épingle : changer ses deux nombres ici.
+  // Centres des quartiers : YD.AREA_POINTS (assets/js/app.js).
   // other-dahab et near-dahab n'ont pas d'épingle (comptés sous la carte).
-  var AREA_POINTS = {
-    "canyon": [28.5530, 34.5262],
-    "blue-hole-road": [28.5300, 34.5290],
-    "eel-garden": [28.5082, 34.5192],
-    "assala": [28.5055, 34.5135],
-    "zarnouk": [28.5010, 34.5070],
-    "tanmeia": [28.4935, 34.5075],
-    "lighthouse": [28.5000, 34.5196],
-    "masbat": [28.4953, 34.5170],
-    "mashraba": [28.4895, 34.5125],
-    "mubarak": [28.4895, 34.5025],
-    "dahab-city": [28.4840, 34.5050],
-    "lagoon": [28.4720, 34.5000],
-    "south-coast": [28.4310, 34.4610]
-  };
-  var CENTER = [28.4980, 34.5140];
+  // Une annonce dont l'hôte a coché « localisation approximative » a sa propre petite épingle.
+  var AREA_POINTS, CENTER;
 
   var YD, form, wrap, mapEl, noteEl, toggle;
   var map = null, layer = null, last = null, fitted = false;
@@ -89,10 +74,17 @@
     if (last) draw(last);
   }
 
+  // Nombre de logements par quartier, sans ceux qui ont leur propre épingle.
   function counts(list) {
     var c = {};
-    list.forEach(function (l) { c[l.area] = (c[l.area] || 0) + 1; });
+    list.forEach(function (l) { if (!YD.hasPoint(l)) c[l.area] = (c[l.area] || 0) + 1; });
     return c;
+  }
+
+  function pointPopupHtml(l) {
+    return '<div class="map-popup"><strong dir="auto">' + esc(YD.listingText(l.title)) + "</strong>" +
+      '<p class="muted">' + esc(t("area." + l.area)) + " · " + esc(t("map.point")) + "</p>" +
+      '<a class="btn btn-small" href="stay/' + encodeURIComponent(l.id) + '">' + esc(t("map.showOne")) + "</a></div>";
   }
 
   function popupHtml(area, list) {
@@ -122,6 +114,7 @@
       var selected = detail.area === area;
       // Pas d'épingle pour un quartier vide (sauf s'il est choisi dans le filtre).
       if (!n && !selected) return;
+      var inArea = all.filter(function (l) { return l.area === area; });
       var cls = "map-pin" + (n ? "" : " is-empty") + (selected ? " is-selected" : "");
       var icon = L.divIcon({
         className: "map-pin-wrap",
@@ -139,7 +132,23 @@
         zIndexOffset: selected ? 1000 : (n ? 500 : 0)
       });
       if (canHover) marker.bindTooltip(esc(t("area." + area)), { direction: "top", offset: [0, -20], className: "map-tip" });
-      marker.bindPopup(popupHtml(area, all.filter(function (l) { return l.area === area; })), { closeButton: true, autoPanPadding: [24, 24] });
+      marker.bindPopup(popupHtml(area, inArea), { closeButton: true, autoPanPadding: [24, 24] });
+      layer.addLayer(marker);
+    });
+    // Logements avec localisation approximative : une petite épingle chacun.
+    all.filter(YD.hasPoint).forEach(function (l) {
+      var selected = detail.area === l.area;
+      var icon = L.divIcon({
+        className: "map-pin-wrap",
+        html: '<span class="map-pin map-pin-point' + (selected ? " is-selected" : "") + '"><svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><path d="M3 11.5 12 4l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z" fill="currentColor"/></svg></span>',
+        iconSize: [30, 30],
+        iconAnchor: [15, 15],
+        popupAnchor: [0, -14]
+      });
+      var title = YD.listingText(l.title);
+      var marker = L.marker([l.lat, l.lng], { icon: icon, title: title, alt: title, keyboard: true, riseOnHover: true, zIndexOffset: selected ? 1100 : 600 });
+      if (canHover) marker.bindTooltip(esc(title), { direction: "top", offset: [0, -16], className: "map-tip" });
+      marker.bindPopup(pointPopupHtml(l), { closeButton: true, autoPanPadding: [24, 24] });
       layer.addLayer(marker);
     });
     fit();
@@ -152,6 +161,9 @@
     var pts = Object.keys(AREA_POINTS).filter(function (a) {
       return last.area ? a === last.area : byArea[a];
     }).map(function (a) { return AREA_POINTS[a]; });
+    (last.anyArea || []).forEach(function (l) {
+      if (YD.hasPoint(l) && (!last.area || l.area === last.area)) pts.push([l.lat, l.lng]);
+    });
     if (!pts.length) { map.setView(CENTER, 13); return; }
     if (pts.length === 1) { map.setView(pts[0], last.area ? 15 : 14, { animate: fitted }); }
     else map.fitBounds(pts, { padding: [40, 40], maxZoom: 15, animate: fitted });
@@ -161,6 +173,7 @@
   document.addEventListener("DOMContentLoaded", function () {
     YD = window.YD;
     wrap = document.getElementById("area-map-wrap");
+    if (YD) { AREA_POINTS = YD.AREA_POINTS; CENTER = YD.DAHAB_CENTER; }
     if (!YD || !wrap) return;
     form = document.getElementById("filters");
     mapEl = document.getElementById("area-map");

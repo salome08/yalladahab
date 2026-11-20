@@ -1,6 +1,6 @@
 // Yalla Dahab : import rapide d'une annonce Airbnb.
 // L'hôte colle le lien de son annonce Airbnb dans l'éditeur ; cette fonction lit la page
-// (titre, description, voyageurs, chambres, lits, équipements, photos) et copie les photos dans son dossier
+// (titre, description, voyageurs, chambres, lits, équipements, photos, localisation approximative) et copie les photos dans son dossier
 // de photos, pour que l'annonce ne dépende pas d'Airbnb. Réservée aux comptes connectés.
 import { createClient } from "jsr:@supabase/supabase-js@2";
 
@@ -119,6 +119,27 @@ function amenities(html: string) {
   return [...found];
 }
 
+// Localisation approximative : Airbnb ne donne qu'un point décalé de quelques centaines de mètres
+// (l'adresse exacte n'est donnée qu'après réservation). On lit ce point dans le JSON de la page.
+function location(html: string) {
+  const num = "(-?\\d{1,3}\\.\\d+)";
+  const patterns = [
+    new RegExp(`"listingLat":${num},"listingLng":${num}`),
+    new RegExp(`"lat":${num},"lng":${num}`),
+    new RegExp(`"latitude":${num},"longitude":${num}`),
+  ];
+  for (const re of patterns) {
+    const m = html.match(re);
+    if (!m) continue;
+    const lat = Number(m[1]), lng = Number(m[2]);
+    // Un point (0, 0) ou hors limites n'est pas une vraie position.
+    if (Math.abs(lat) <= 90 && Math.abs(lng) <= 180 && (lat || lng)) {
+      return { lat: Math.round(lat * 1e5) / 1e5, lng: Math.round(lng * 1e5) / 1e5 };
+    }
+  }
+  return { lat: null, lng: null };
+}
+
 function parse(html: string, roomId = "") {
   // <title> : « Nom de l'annonce - Appartements à louer à Dahab, … - Airbnb »
   const pageTitle = decode(html.match(/<title>([^<]*)<\/title>/i)?.[1] || "");
@@ -165,7 +186,7 @@ function parse(html: string, roomId = "") {
   const og = meta(html, "og:image");
   if (!photos.length && og) photos.push(og.split("?")[0]);
 
-  return { title, description, guests, bedrooms, beds, type, amenities: amenities(html), photos };
+  return { title, description, guests, bedrooms, beds, type, amenities: amenities(html), photos, ...location(html) };
 }
 
 // Copie une photo Airbnb (taille 1200 px) dans le dossier de photos de l'hôte.
