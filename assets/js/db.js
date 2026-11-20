@@ -47,13 +47,14 @@
       pricesByGuests: r.price_by_guests || null,
       wifiMbps: r.wifi_mbps, amenities: r.amenities || [], photos: r.photos || [],
       hue: r.hue, verified: r.verified, featured: r.featured,
+      lat: r.lat == null ? null : r.lat, lng: r.lng == null ? null : r.lng, showLocation: Boolean(r.show_location),
       host: { name: r.host_name, whatsapp: r.host_whatsapp },
       createdAt: r.created_at
     };
   }
 
   function listingToRow(l) {
-    return {
+    var row = {
       title: l.title, description: l.description, area: l.area, type: l.type,
       guests: l.guests, bedrooms: l.bedrooms, beds: l.beds,
       price_night: l.pricePerNight, price_week: l.pricePerWeek, price_month: l.pricePerMonth, currency: l.currency || "EGP",
@@ -61,6 +62,11 @@
       wifi_mbps: l.wifiMbps, amenities: l.amenities || [], photos: l.photos || [],
       hue: l.hue, host_name: l.host.name, host_whatsapp: l.host.whatsapp
     };
+    // Localisation approximative (import Airbnb) : envoyée seulement quand l'annonce en a une.
+    if (l.lat != null && l.lng != null) {
+      row.lat = l.lat; row.lng = l.lng; row.show_location = Boolean(l.showLocation);
+    }
+    return row;
   }
 
   // Les événements et bannières ont les mêmes champs dans la base et dans les fichiers.

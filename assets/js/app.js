@@ -13,6 +13,54 @@
   var RTL_LANGS = ["ar"];
   var AREAS = ["blue-hole-road", "canyon", "eel-garden", "assala", "mashraba", "masbat", "lighthouse", "dahab-city", "mubarak", "zarnouk", "tanmeia", "lagoon", "south-coast", "other-dahab", "near-dahab"];
   var TYPES = ["studio", "apartment", "villa", "room"];
+  // Position approximative du centre de chaque quartier [latitude, longitude] (carte et import Airbnb).
+  // Pour déplacer une épingle : changer ses deux nombres ici.
+  // other-dahab et near-dahab n'ont pas d'épingle.
+  var AREA_POINTS = {
+    "canyon": [28.5530, 34.5262],
+    "blue-hole-road": [28.5300, 34.5290],
+    "eel-garden": [28.5082, 34.5192],
+    "assala": [28.5055, 34.5135],
+    "zarnouk": [28.5010, 34.5070],
+    "tanmeia": [28.4935, 34.5075],
+    "lighthouse": [28.5000, 34.5196],
+    "masbat": [28.4953, 34.5170],
+    "mashraba": [28.4895, 34.5125],
+    "mubarak": [28.4895, 34.5025],
+    "dahab-city": [28.4840, 34.5050],
+    "lagoon": [28.4720, 34.5000],
+    "south-coast": [28.4310, 34.4610]
+  };
+  var DAHAB_CENTER = [28.4980, 34.5140];
+
+  // Distance en km entre deux points [lat, lng].
+  function distanceKm(a, b) {
+    var r = Math.PI / 180;
+    var dLat = (b[0] - a[0]) * r, dLng = (b[1] - a[1]) * r;
+    var h = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos(a[0] * r) * Math.cos(b[0] * r) * Math.sin(dLng / 2) * Math.sin(dLng / 2);
+    return 12742 * Math.asin(Math.sqrt(h));
+  }
+
+  // Quartier le plus proche d'un point (import Airbnb). Loin de tout quartier : « Autre quartier de Dahab »
+  // ou « Près de Dahab » ; trop loin (plus de 40 km) : rien.
+  function areaFromPoint(lat, lng) {
+    if (lat == null || lng == null) return "";
+    var p = [Number(lat), Number(lng)], best = "", bestKm = Infinity;
+    Object.keys(AREA_POINTS).forEach(function (a) {
+      var d = distanceKm(p, AREA_POINTS[a]);
+      if (d < bestKm) { bestKm = d; best = a; }
+    });
+    if (bestKm <= 1.2) return best;
+    var fromCenter = distanceKm(p, DAHAB_CENTER);
+    if (fromCenter <= 6) return "other-dahab";
+    if (fromCenter <= 40) return "near-dahab";
+    return "";
+  }
+
+  // Annonce dont l'hôte a choisi d'afficher la localisation approximative.
+  function hasPoint(l) {
+    return Boolean(l && l.showLocation && l.lat != null && l.lng != null);
+  }
   // Équipements rangés par catégorie (formulaire et page annonce). Titres : clés amenityGroup.*
   var AMENITY_GROUPS = [
     { id: "essentials", items: ["wifi", "workspace", "ac", "fan", "heating", "hotWater", "backupPower", "tv", "bedLinens", "essentials", "safe", "firstAid"] },
@@ -511,7 +559,10 @@
           (l.wifiMbps ? '<p class="wifi-pill">📶 ' + esc(t("listing.wifiTested", { n: l.wifiMbps })) + "</p>" : "") +
           "<h2>" + esc(t("listing.amenities")) + "</h2>" +
           amenitiesHtml(l.amenities) +
-          '<p><a href="https://maps.google.com/?q=' + encodeURIComponent((l.area === "near-dahab" || l.area === "other-dahab" ? "" : t("area." + l.area) + ", ") + "Dahab, Egypt") + '" target="_blank" rel="noopener">📍 ' + esc(t("listing.map")) + "</a></p>" +
+          // Carte : la localisation approximative si l'hôte l'a choisie, sinon le quartier.
+          (hasPoint(l)
+            ? '<p><a href="https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(l.lat + "," + l.lng) + '" target="_blank" rel="noopener">📍 ' + esc(t("listing.mapPoint")) + '</a><br><span class="small muted">' + esc(t("listing.mapPointNote")) + "</span></p>"
+            : '<p><a href="https://maps.google.com/?q=' + encodeURIComponent((l.area === "near-dahab" || l.area === "other-dahab" ? "" : t("area." + l.area) + ", ") + "Dahab, Egypt") + '" target="_blank" rel="noopener">📍 ' + esc(t("listing.map")) + "</a></p>") +
         "</div>" +
         '<aside class="contact-box">' +
           '<p class="price">' + priceHtml(l) + "</p>" +
@@ -766,6 +817,7 @@
     t: t, loc: loc, locHtml: locHtml, listingText: listingText, listingTextHtml: listingTextHtml, esc: esc, money: money, lang: function () { return lang; },
     formatDate: formatDate, photoStrip: photoStrip, refreshStrips: refreshStrips, openLightbox: openLightbox, bedsText: bedsText, priceHtml: priceHtml, guestPricesHtml: guestPricesHtml, optionList: optionList, applyStaticTexts: applyStaticTexts,
     AREAS: AREAS, TYPES: TYPES, AMENITIES: AMENITIES, AMENITY_GROUPS: AMENITY_GROUPS,
+    AREA_POINTS: AREA_POINTS, DAHAB_CENTER: DAHAB_CENTER, areaFromPoint: areaFromPoint, hasPoint: hasPoint,
     setNoStats: function (off) { storageSet("yd-no-stats", off ? "1" : "0"); },
     registerPage: function (name, init) { PAGES[name] = init; PRIVATE_PAGES[name] = true; }
   };

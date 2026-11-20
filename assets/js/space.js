@@ -377,6 +377,8 @@
           '<p class="full small muted">' + esc(t("editor.langHelp")) + "</p>" +
           "<label>" + esc(t("search.area")) + '<select name="area" required>' + YD.optionList(YD.AREAS, "area.", "—") + "</select></label>" +
           "<label>" + esc(t("search.type")) + '<select name="type" required>' + YD.optionList(YD.TYPES, "type.", "—") + "</select></label>" +
+          // Localisation approximative (venue d'Airbnb) : affichée sur la carte seulement si la case est cochée.
+          '<div class="full location-box" id="location-box"></div>' +
           // Capacité : 3 champs sur une ligne.
           '<div class="full field-row field-row-3">' +
           "<label>" + esc(t("host.guests")) + '<input name="guests" type="number" min="1" required value="' + esc(l.guests) + '"></label>' +
@@ -411,6 +413,17 @@
 
       var form = document.getElementById("listing-form");
       form.elements.area.value = l.area;
+
+      // Point approximatif d'Airbnb (vide tant que l'annonce n'a pas été importée).
+      var point = { lat: l.lat == null ? null : l.lat, lng: l.lng == null ? null : l.lng };
+      function drawLocation(checked) {
+        var has = point.lat != null && point.lng != null;
+        document.getElementById("location-box").innerHTML =
+          '<label class="check"><input type="checkbox" name="show_location"' + (has && checked ? " checked" : "") + (has ? "" : " disabled") + "> " + esc(t("editor.showLocation")) + "</label>" +
+          '<p class="small muted">' + esc(t(has ? "editor.showLocationHelp" : "editor.noLocation")) +
+          (has ? ' <a href="https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(point.lat + "," + point.lng) + '" target="_blank" rel="noopener">' + esc(t("editor.seeLocation")) + "</a>" : "") + "</p>";
+      }
+      drawLocation(l.showLocation);
       form.elements.type.value = l.type;
       form.elements.currency.value = l.currency || "EGP";
       window.scrollTo(0, 0);
@@ -485,6 +498,16 @@
           if (r.guests) f.guests.value = r.guests;
           if (r.bedrooms != null) f.bedrooms.value = r.bedrooms;
           if (r.beds) f.beds.value = r.beds;
+          // Localisation approximative : on la garde, la case est cochée, et le quartier est choisi
+          // d'après ce point (nouvelle annonce, ou quartier pas encore choisi).
+          var foundArea = "";
+          if (r.lat != null && r.lng != null) {
+            point = { lat: r.lat, lng: r.lng };
+            drawLocation(true);
+            foundArea = YD.areaFromPoint(r.lat, r.lng);
+            if (foundArea && (!existing || !f.area.value)) f.area.value = foundArea;
+            else foundArea = "";
+          }
           (r.amenities || []).forEach(function (a) {
             var box = form.querySelector('[name="amenities"][value="' + a + '"]');
             if (box) box.checked = true;
@@ -497,7 +520,7 @@
           else photos = photos.concat(r.photos || []).slice(0, MAX_PHOTOS);
           drawPhotos();
           status.textContent = "";
-          showMessage(t(existing ? "import.doneEdit" : "import.done", { count: (r.photos || []).length }));
+          showMessage(t(existing ? "import.doneEdit" : foundArea ? "import.doneArea" : "import.done", { count: (r.photos || []).length, area: foundArea ? t("area." + foundArea) : "" }));
         }, function (err) {
           status.textContent = "";
           var code = (err && err.message) || "";
@@ -555,6 +578,7 @@
           wifiMbps: numberOrNull(f.wifi.value),
           amenities: Array.prototype.map.call(form.querySelectorAll('[name="amenities"]:checked'), function (c) { return c.value; }),
           photos: photos, hue: l.hue,
+          lat: point.lat, lng: point.lng, showLocation: Boolean(f.show_location && f.show_location.checked),
           host: hostContact,
           // L'admin publie directement, et l'annonce reste dans son espace jusqu'à ce qu'elle la donne.
           ownerId: profile.is_admin ? user.id : null,
