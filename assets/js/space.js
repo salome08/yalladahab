@@ -489,7 +489,9 @@
             var box = form.querySelector('[name="amenities"][value="' + a + '"]');
             if (box) box.checked = true;
           });
+          // Type : celui reconnu sur Airbnb, sinon « Appartement » si aucun type n'est encore choisi.
           if (r.type && YD.TYPES.indexOf(r.type) !== -1) f.type.value = r.type;
+          else if (!f.type.value) f.type.value = "apartment";
           // Nouvelle annonce : on ajoute les photos. Annonce existante : on remplace par celles d'Airbnb.
           if (existing && r.photos && r.photos.length) photos = r.photos.slice(0, MAX_PHOTOS);
           else photos = photos.concat(r.photos || []).slice(0, MAX_PHOTOS);
