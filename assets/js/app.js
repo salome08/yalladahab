@@ -384,9 +384,52 @@
     return l.beds > 0 ? " · " + l.beds + " " + esc(t(l.beds === 1 ? "card.bed" : "card.beds")) : "";
   }
 
+  // Photos de la carte : on peut les faire défiler sans ouvrir l'annonce
+  // (glisser du doigt sur téléphone, flèches au survol sur ordinateur, points en bas).
+  // Au plus 10 photos pour garder la page légère ; la 1re garde l'étiquette du type.
+  var CARD_MAX_PHOTOS = 10;
+  function cardPhotos(l) {
+    var photos = (l.photos || []).filter(Boolean).slice(0, CARD_MAX_PHOTOS);
+    if (photos.length < 2) return photo(l.hue, t("type." + l.type), photos[0]);
+    var slides = "", dots = "";
+    photos.forEach(function (src, i) {
+      slides += i === 0 ? photo(l.hue, t("type." + l.type), src) : photo(l.hue, "", src);
+      dots += '<i' + (i === 0 ? ' class="on"' : "") + "></i>";
+    });
+    return '<div class="card-photos" data-at-start="true">' +
+      '<div class="card-track">' + slides + "</div>" +
+      '<button type="button" class="card-nav card-prev" data-card-step="-1" tabindex="-1" aria-label="' + esc(t("lightbox.prev")) + '">' + CHEVRON + "</button>" +
+      '<button type="button" class="card-nav card-next" data-card-step="1" tabindex="-1" aria-label="' + esc(t("lightbox.next")) + '">' + CHEVRON + "</button>" +
+      '<span class="card-dots" aria-hidden="true">' + dots + "</span></div>";
+  }
+  // Met à jour les points et les flèches selon la photo affichée.
+  function updateCardPhotos(box) {
+    var track = box.querySelector(".card-track");
+    var w = track.clientWidth || 1;
+    var pos = Math.abs(track.scrollLeft); // en arabe (RTL) scrollLeft est négatif
+    var max = track.scrollWidth - w;
+    var i = Math.round(pos / w);
+    box.dataset.atStart = String(pos <= 2);
+    box.dataset.atEnd = String(pos >= max - 2);
+    Array.prototype.forEach.call(box.querySelectorAll(".card-dots i"), function (d, k) { d.className = k === i ? "on" : ""; });
+  }
+  // Les flèches sont dans le lien de la carte : on empêche d'ouvrir l'annonce.
+  document.addEventListener("click", function (e) {
+    var nav = e.target.closest && e.target.closest("[data-card-step]");
+    if (!nav) return;
+    e.preventDefault(); e.stopPropagation();
+    var track = nav.parentNode.querySelector(".card-track");
+    var rtl = getComputedStyle(track).direction === "rtl";
+    var step = Number(nav.dataset.cardStep) * track.clientWidth;
+    track.scrollBy({ left: rtl ? -step : step, behavior: "smooth" });
+  }, true);
+  document.addEventListener("scroll", function (e) {
+    if (e.target.classList && e.target.classList.contains("card-track")) updateCardPhotos(e.target.parentNode);
+  }, true);
+
   function listingCard(l) {
     return '<a class="card listing-card" href="stay/' + encodeURIComponent(l.id) + '">' +
-      photo(l.hue, t("type." + l.type), photoOf(l, 0)) +
+      cardPhotos(l) +
       (l.verified ? '<span class="badge badge-verified">✓ ' + esc(t("card.verified")) + "</span>" : "") +
       '<div class="card-body">' +
         '<p class="card-meta">' + esc(t("area." + l.area)) + " · " + l.guests + " " + esc(t("card.guests")) + bedsText(l) +

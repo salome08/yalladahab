@@ -279,6 +279,38 @@ a.card:hover .photo img { transform: scale(1.04); }
 }
 .photo span:empty { display: none; }
 
+/* Photos qui défilent sur les cartes logements */
+.card-photos { position: relative; }
+.card-track {
+  display: flex; overflow-x: auto; scroll-snap-type: x mandatory; scroll-behavior: smooth;
+  scrollbar-width: none; -webkit-overflow-scrolling: touch; overscroll-behavior-x: contain;
+}
+.card-track::-webkit-scrollbar { display: none; }
+.card-track .photo { flex: 0 0 100%; scroll-snap-align: start; scroll-snap-stop: always; }
+.card-nav {
+  position: absolute; top: 50%; z-index: 2; width: 34px; height: 34px; margin-top: -17px; padding: 0;
+  display: inline-flex; align-items: center; justify-content: center;
+  border: 0; border-radius: 999px; cursor: pointer; color: #1e2a22;
+  background: rgba(255, 255, 255, .92); box-shadow: 0 2px 8px rgba(0, 0, 0, .18);
+  opacity: 0; transition: opacity .2s, transform .2s;
+}
+.card-nav:hover { transform: scale(1.08); }
+.card-nav svg { width: 18px; height: 18px; }
+.card-prev { inset-inline-start: 10px; }
+.card-next { inset-inline-end: 10px; }
+.card-prev svg { transform: scaleX(-1); }
+[dir="rtl"] .card-prev svg { transform: none; }
+[dir="rtl"] .card-next svg { transform: scaleX(-1); }
+.card:hover .card-nav, .card-nav:focus-visible { opacity: 1; }
+.card-photos[data-at-start="true"] .card-prev, .card-photos[data-at-end="true"] .card-next { opacity: 0; pointer-events: none; }
+@media (hover: none) { .card-nav { display: none; } }
+.card-dots {
+  position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%); z-index: 2;
+  display: flex; gap: 5px; pointer-events: none;
+}
+.card-dots i { width: 6px; height: 6px; border-radius: 50%; background: rgba(255, 255, 255, .6); box-shadow: 0 0 3px rgba(0, 0, 0, .35); transition: transform .2s, background .2s; }
+.card-dots i.on { background: #fff; transform: scale(1.3); }
+
 .badge { display: inline-block; font-size: .74rem; font-weight: 700; padding: 4px 10px; border-radius: 999px; background: var(--surface-2); color: var(--ink); vertical-align: middle; }
 .badge-verified { background: var(--success-soft); color: var(--success); }
 .listing-card .badge-verified { position: absolute; top: 12px; inset-inline-start: 12px; z-index: 1; box-shadow: 0 2px 8px rgba(0, 0, 0, .12); }
