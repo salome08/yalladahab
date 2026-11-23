@@ -523,8 +523,8 @@
         return true;
       }
       var results = LISTINGS.filter(function (l) { return matches(l); });
-      function sortPrice(l) { return inEgp(stayPrice(l), l.currency) || Infinity; }
-      results.sort(function (a, b) { return sortPrice(a) - sortPrice(b); });
+      // Les logements les plus récents en premier (date d'ajout sur le site).
+      results.sort(function (a, b) { return String(b.createdAt || "").localeCompare(String(a.createdAt || "")); });
       document.getElementById("results-count").textContent = t("listings.count", { n: results.length });
       document.getElementById("results").innerHTML = results.length
         ? results.map(listingCard).join("")
