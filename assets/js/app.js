@@ -6,6 +6,8 @@
   var DB = window.YD_DB;
   // Remplis au chargement de la page, depuis la base ou depuis les fichiers.
   var LISTINGS = [];
+  // Adresse lisible de chaque annonce en ligne : { id: "dar-bahr-horizon-assala" } (assets/js/slug.js).
+  var SLUGS = {};
   var EVENTS = [];
   var ADS = [];
   var LANGS = ["en", "fr", "ar"];
@@ -58,6 +60,11 @@
   }
 
   // Annonce dont l'hôte a choisi d'afficher la localisation approximative.
+  // Lien d'une annonce : /stay/<adresse lisible> (l'id seulement si l'adresse n'est pas encore connue).
+  function stayPath(l) {
+    return "stay/" + encodeURIComponent(SLUGS[l.id] || l.id);
+  }
+
   function hasPoint(l) {
     return Boolean(l && l.showLocation && l.lat != null && l.lng != null);
   }
@@ -429,7 +436,7 @@
   }, true);
 
   function listingCard(l) {
-    return '<a class="card listing-card" href="stay/' + encodeURIComponent(l.id) + '" target="_blank" rel="noopener">' +
+    return '<a class="card listing-card" href="' + stayPath(l) + '" target="_blank" rel="noopener">' +
       cardPhotos(l) +
       (l.verified ? '<span class="badge badge-verified">✓ ' + esc(t("card.verified")) + "</span>" : "") +
       '<div class="card-body">' +
@@ -561,11 +568,19 @@
     return html;
   }
 
-  function initListing() {
-    // stay/<id>.html (page de partage) donne l'id dans la page ; listing.html?id=… dans l'adresse.
-    var id = document.body.dataset.listingId || new URLSearchParams(window.location.search).get("id");
-    var l = LISTINGS.filter(function (x) { return x.id === id; })[0];
+  function initListing(known) {
+    // stay/<adresse>.html (page de partage) donne l'id dans la page ; listing.html?id=… dans l'adresse.
+    // L'id peut aussi être une adresse lisible (annonce publiée depuis peu, ou ancienne adresse après un changement de titre).
+    var id = known || document.body.dataset.listingId || new URLSearchParams(window.location.search).get("id");
+    var l = LISTINGS.filter(function (x) { return x.id === id || SLUGS[x.id] === id; })[0];
     var root = document.getElementById("listing");
+    if (!l && id && !known && window.fetch) {
+      // Ancienne adresse lisible : stay/slugs.json garde toutes les adresses déjà données.
+      return fetch("stay/slugs.json", { cache: "no-cache" })
+        .then(function (r) { return r.ok ? r.json() : {}; })
+        .catch(function () { return {}; })
+        .then(function (map) { return initListing((map && map[id]) || id); });
+    }
     if (!l) {
       root.innerHTML = '<p class="empty">' + esc(t("listing.notFound")) + ' <a href="listings.html">' + esc(t("listing.back")) + "</a></p>";
       return;
@@ -574,10 +589,11 @@
     viewedListing = l.id;
     document.title = title + " · Yalla Dahab";
     // Lien partagé : la page stay/<id> a sa photo et son titre en aperçu sur WhatsApp et Facebook.
-    var pageUrl = "https://yalladahab.com/stay/" + encodeURIComponent(l.id);
-    // L'adresse affichée devient celle de la page de partage : copier-coller le lien donne aussi la photo en aperçu.
-    if (!document.body.dataset.listingId && window.history.replaceState) {
-      try { window.history.replaceState(null, "", "/stay/" + encodeURIComponent(l.id) + window.location.hash); } catch (e) {}
+    var pageUrl = "https://yalladahab.com/" + stayPath(l);
+    // L'adresse affichée devient l'adresse lisible de la page de partage (aussi quand on arrive par un ancien
+    // lien /stay/<id>) : copier-coller le lien donne la photo en aperçu.
+    if (window.history.replaceState && window.location.pathname !== "/" + stayPath(l)) {
+      try { window.history.replaceState(null, "", "/" + stayPath(l) + window.location.hash); } catch (e) {}
     }
     var photos = l.photos || [];
     // Une photo de la fiche devient cliquable (plein écran) seulement si elle existe vraiment.
@@ -861,7 +877,7 @@
     t: t, loc: loc, locHtml: locHtml, listingText: listingText, listingTextHtml: listingTextHtml, esc: esc, money: money, lang: function () { return lang; },
     formatDate: formatDate, photoStrip: photoStrip, refreshStrips: refreshStrips, openLightbox: openLightbox, bedsText: bedsText, priceHtml: priceHtml, guestPricesHtml: guestPricesHtml, optionList: optionList, applyStaticTexts: applyStaticTexts,
     AREAS: AREAS, TYPES: TYPES, AMENITIES: AMENITIES, AMENITY_GROUPS: AMENITY_GROUPS,
-    AREA_POINTS: AREA_POINTS, DAHAB_CENTER: DAHAB_CENTER, areaFromPoint: areaFromPoint, hasPoint: hasPoint,
+    AREA_POINTS: AREA_POINTS, DAHAB_CENTER: DAHAB_CENTER, areaFromPoint: areaFromPoint, hasPoint: hasPoint, stayPath: stayPath,
     setNoStats: function (off) { storageSet("yd-no-stats", off ? "1" : "0"); },
     registerPage: function (name, init) { PAGES[name] = init; PRIVATE_PAGES[name] = true; }
   };
@@ -876,6 +892,7 @@
     if (PRIVATE_PAGES[page]) { init(); return; }
     DB.load().then(function (data) {
       LISTINGS = data.listings;
+      if (window.YD_SLUGS) SLUGS = window.YD_SLUGS(LISTINGS);
       EVENTS = data.events;
       ADS = data.ads;
     }, function (err) {
