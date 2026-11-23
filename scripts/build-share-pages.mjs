@@ -1,5 +1,7 @@
-// Crée une page par annonce en ligne (stay/<id>.html) pour que WhatsApp, Facebook, etc.
-// affichent un aperçu avec la photo, le titre et le prix quand on partage le lien.
+// Crée une page par annonce en ligne (stay/<adresse lisible>.html, ex. stay/dar-bahr-horizon-assala.html)
+// pour que WhatsApp, Facebook, etc. affichent un aperçu avec la photo, le titre et le prix quand on partage le lien.
+// Les anciens liens restent valables : stay/<id>.html (liens donnés avant les adresses lisibles) et
+// les anciennes adresses lisibles (titre changé), gardées dans stay/slugs.json.
 // Lancé par .github/workflows/share-pages.yml ; peut aussi tourner à la main :
 //   node scripts/build-share-pages.mjs            (lit les annonces dans Supabase)
 //   node scripts/build-share-pages.mjs data.json  (lit les annonces dans un fichier, pour tester)
@@ -13,9 +15,10 @@ const IMG = `${OUT}/img`;
 
 // Réglages et textes du site, lus dans les fichiers du site lui-même.
 const ctx = { window: {} };
-vm.runInNewContext(fs.readFileSync("assets/js/config.js", "utf8") + fs.readFileSync("assets/js/i18n.js", "utf8"), ctx);
+vm.runInNewContext(["config.js", "i18n.js", "slug.js"].map((f) => fs.readFileSync(`assets/js/${f}`, "utf8")).join("\n"), ctx);
 const CONFIG = ctx.window.YD_CONFIG;
 const EN = ctx.window.YD_I18N.en;
+const makeSlugs = ctx.window.YD_SLUGS;
 
 async function loadListings() {
   if (process.argv[2]) return JSON.parse(fs.readFileSync(process.argv[2], "utf8"));
@@ -60,12 +63,12 @@ function summary(l) {
   return parts.join(" · ");
 }
 
-function page(template, l, shareImage) {
+function page(template, l, shareImage, slug) {
   const title = `${text(l.title)} · ${areaLabel(l)}`;
   let desc = text(l.description).replace(/\s+/g, " ").trim();
   if (desc.length > 160) desc = desc.slice(0, 157).replace(/\s+\S*$/, "") + "…";
   desc = `${summary(l)}. ${desc}`;
-  const url = `${SITE}/${OUT}/${l.id}`;
+  const url = `${SITE}/${OUT}/${slug}`;
   // Image d'aperçu : la composition (grande photo + miniatures + bandeau vert sauge),
   // sinon la 1re photo, sinon l'image du site.
   const photo = l.photos && l.photos[0];
@@ -124,15 +127,34 @@ try {
 }
 const imageOf = new Map(jobs.filter((j) => made.has(j.file)).map((j) => [j.listing.id, j.file]));
 
+// Adresses lisibles. stay/slugs.json garde toutes les adresses déjà données (adresse → id),
+// pour qu'un lien partagé reste bon même si le titre change ensuite.
+const SLUG_FILE = `${OUT}/slugs.json`;
+const slugOf = makeSlugs(listings);
+let history = {};
+try { history = JSON.parse(fs.readFileSync(SLUG_FILE, "utf8")); } catch (e) {}
+for (const [id, slug] of Object.entries(slugOf)) history[slug] = id;   // l'adresse actuelle gagne toujours
+const sortedHistory = Object.fromEntries(Object.entries(history).sort(([a], [b]) => (a < b ? -1 : 1)));
+fs.writeFileSync(SLUG_FILE, JSON.stringify(sortedHistory, null, 1) + "\n");
+
 const keep = new Set();
+const byId = new Map(listings.map((l) => [l.id, l]));
+const names = new Map();   // nom de fichier → annonce
 for (const l of listings) {
-  const file = `${l.id}.html`;
+  names.set(slugOf[l.id], l);   // nouvelle adresse lisible
+  names.set(l.id, l);           // ancien lien /stay/<id>
+}
+for (const [slug, id] of Object.entries(history)) if (!names.has(slug) && byId.has(id)) names.set(slug, byId.get(id));
+for (const [name, l] of names) {
+  if (!safeId(name)) continue;
+  const file = `${name}.html`;
   keep.add(file);
-  fs.writeFileSync(`${OUT}/${file}`, page(template, l, imageOf.get(l.id)));
+  // Toutes ces pages annoncent l'adresse lisible actuelle (og:url) ; la fiche l'affiche aussi dans la barre d'adresse.
+  fs.writeFileSync(`${OUT}/${file}`, page(template, l, imageOf.get(l.id), slugOf[l.id]));
 }
 // Les annonces retirées ou mises en pause perdent leur page (le lien renvoie alors vers la fiche).
 for (const f of fs.readdirSync(OUT)) if (f.endsWith(".html") && !keep.has(f)) fs.unlinkSync(`${OUT}/${f}`);
 // Les anciennes images d'aperçu (photos ou prix changés, annonce retirée) sont supprimées.
 const keepImg = new Set([...imageOf.values()].map((f) => f.slice(IMG.length + 1)));
 for (const f of fs.readdirSync(IMG)) if (!keepImg.has(f)) fs.unlinkSync(`${IMG}/${f}`);
-console.log(`${keep.size} page(s) de partage dans ${OUT}/, ${keepImg.size} image(s) d'aperçu dans ${IMG}/`);
+console.log(`${listings.length} annonce(s), ${keep.size} page(s) de partage dans ${OUT}/, ${keepImg.size} image(s) d'aperçu dans ${IMG}/`);
