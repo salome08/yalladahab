@@ -75,6 +75,7 @@
     { key: "beach", test: function (l) { return hasAny(l, ["beachfront", "beachAccess"]); } },
     { key: "seaview", test: function (l) { return hasAny(l, ["seaView"]); } },
     { key: "rooftop", test: function (l) { return hasAny(l, ["rooftop"]); } },
+    { key: "garden", test: function (l) { return hasAny(l, ["garden"]); } },
     { key: "workspace", test: function (l) { return hasAny(l, ["workspace"]) || l.wifiMbps >= 50; } },
     { key: "pets", test: function (l) { return hasAny(l, ["pets"]); } }
   ];
@@ -475,7 +476,7 @@
     var featured = LISTINGS.filter(function (l) { return l.featured; }).slice(0, 3);
     var quick = document.getElementById("quick-filters");
     if (quick) {
-      quick.innerHTML = [["beach=1", "filter.beach"], ["seaview=1", "filter.seaview"], ["rooftop=1", "filter.rooftop"], ["stay=monthly", "filter.monthly"], ["pets=1", "filter.pets"]]
+      quick.innerHTML = [["beach=1", "filter.beach"], ["seaview=1", "filter.seaview"], ["rooftop=1", "filter.rooftop"], ["garden=1", "filter.garden"], ["stay=monthly", "filter.monthly"], ["pets=1", "filter.pets"]]
         .map(function (q) { return '<a href="listings.html?' + q[0] + '">' + esc(t(q[1])) + "</a>"; }).join("");
     }
     document.getElementById("featured-listings").innerHTML = featured.map(listingCard).join("");
