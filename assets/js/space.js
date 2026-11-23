@@ -313,7 +313,7 @@
               '<button type="button" class="link-button" data-action="edit">' + esc(t("account.edit")) + "</button>" +
               (forOther(l) ? '<button type="button" class="link-button" data-action="give">' + esc(t("give.button")) + "</button>" : "") +
               (toggle ? '<button type="button" class="link-button" data-action="status" data-status="' + toggle[0] + '">' + esc(t(toggle[1])) + "</button>" : "") +
-              (l.status === "published" ? '<a href="listing.html?id=' + encodeURIComponent(l.id) + '">' + esc(t("account.view")) + "</a>" : "") +
+              (l.status === "published" ? '<a href="listing.html?id=' + encodeURIComponent(l.id) + '" target="_blank" rel="noopener">' + esc(t("account.view")) + "</a>" : "") +
               '<button type="button" class="link-button danger" data-action="delete">' + esc(t("account.delete")) + "</button>" +
             "</div></div></article>";
       }).join("");
@@ -694,7 +694,7 @@
       panel().innerHTML = '<p class="muted">' + esc(t("admin.toVisitHelp")) + '</p><div class="space-list">' + list.map(function (l) {
         return '<article class="space-row" data-id="' + esc(l.id) + '">' +
           '<div class="space-thumb" style="--h:' + (l.hue || 190) + '">' + (l.photos[0] ? '<img src="' + esc(l.photos[0]) + '" alt="" onerror="this.remove()">' : "") + "</div>" +
-          '<div class="space-row-body"><h3><a href="listing.html?id=' + encodeURIComponent(l.id) + '">' + YD.listingTextHtml(l.title) + "</a></h3>" +
+          '<div class="space-row-body"><h3><a href="listing.html?id=' + encodeURIComponent(l.id) + '" target="_blank" rel="noopener">' + YD.listingTextHtml(l.title) + "</a></h3>" +
             '<p class="small muted">' + esc(t("area." + l.area)) + " · " + esc(l.host.name) + ' · <a href="https://wa.me/' + esc(l.host.whatsapp) + '" target="_blank" rel="noopener">WhatsApp</a></p>' +
             '<div class="space-row-actions"><button type="button" class="btn btn-small" data-verify>✓ ' + esc(t("admin.markVerified")) + "</button></div>" +
           "</div></article>";
@@ -706,7 +706,7 @@
       panel().innerHTML = '<div class="space-list">' + state.listings.map(function (l) {
         return '<article class="space-row" data-id="' + esc(l.id) + '">' +
           '<div class="space-thumb" style="--h:' + (l.hue || 190) + '">' + (l.photos[0] ? '<img src="' + esc(l.photos[0]) + '" alt="" onerror="this.remove()">' : "") + "</div>" +
-          '<div class="space-row-body"><h3><a href="listing.html?id=' + encodeURIComponent(l.id) + '">' + YD.listingTextHtml(l.title) + "</a></h3>" +
+          '<div class="space-row-body"><h3><a href="listing.html?id=' + encodeURIComponent(l.id) + '" target="_blank" rel="noopener">' + YD.listingTextHtml(l.title) + "</a></h3>" +
             '<p class="small muted">' + esc(l.host.name) + ' · <a href="https://wa.me/' + esc(l.host.whatsapp) + '" target="_blank" rel="noopener">WhatsApp</a></p>' +
             '<div class="space-row-actions">' +
               '<select data-field="status" aria-label="' + esc(t("admin.status")) + '">' + ["pending", "published", "paused", "rejected"].map(function (s) {
@@ -796,7 +796,7 @@
       var listingTable = '<h2>' + esc(t("stats.listingsTitle")) + "</h2>" +
         '<div class="table-wrap"><table class="stat-table"><thead><tr><th>' + esc(t("stats.listing")) + "</th><th>" + esc(t("stats.listingViews")) + "</th><th>" + esc(t("stats.whatsapp")) + "</th></tr></thead><tbody>" +
         (rows.length ? rows.map(function (x) {
-          return '<tr><td><a href="listing.html?id=' + encodeURIComponent(x.l.id) + '">' + YD.listingTextHtml(x.l.title) + "</a>" +
+          return '<tr><td><a href="listing.html?id=' + encodeURIComponent(x.l.id) + '" target="_blank" rel="noopener">' + YD.listingTextHtml(x.l.title) + "</a>" +
             ' <span class="small muted">' + esc(x.l.host.name || "") + "</span></td><td>" + num(x.views) + "</td><td>" + num(x.whatsapp) + "</td></tr>";
         }).join("") : '<tr><td colspan="3" class="muted">' + esc(t("stats.noData")) + "</td></tr>") + "</tbody></table></div>";
 

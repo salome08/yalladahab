@@ -84,7 +84,7 @@
   function pointPopupHtml(l) {
     return '<div class="map-popup"><strong dir="auto">' + esc(YD.listingText(l.title)) + "</strong>" +
       '<p class="muted">' + esc(t("area." + l.area)) + " · " + esc(t("map.point")) + "</p>" +
-      '<a class="btn btn-small" href="stay/' + encodeURIComponent(l.id) + '">' + esc(t("map.showOne")) + "</a></div>";
+      '<a class="btn btn-small" href="stay/' + encodeURIComponent(l.id) + '" target="_blank" rel="noopener">' + esc(t("map.showOne")) + "</a></div>";
   }
 
   function popupHtml(area, list) {
@@ -93,7 +93,7 @@
     if (!n) return html + '<p class="muted">' + esc(t("map.none")) + "</p></div>";
     html += "<p>" + esc(t("listings.count", { n: n })) + "</p>";
     if (n === 1) {
-      html += '<a class="btn btn-small" href="stay/' + encodeURIComponent(list[0].id) + '">' + esc(t("map.showOne")) + "</a>";
+      html += '<a class="btn btn-small" href="stay/' + encodeURIComponent(list[0].id) + '" target="_blank" rel="noopener">' + esc(t("map.showOne")) + "</a>";
     } else {
       html += '<button type="button" class="btn btn-small" data-map-area="' + esc(area) + '">' + esc(t("map.show", { n: n })) + "</button>";
     }

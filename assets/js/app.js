@@ -428,7 +428,7 @@
   }, true);
 
   function listingCard(l) {
-    return '<a class="card listing-card" href="stay/' + encodeURIComponent(l.id) + '">' +
+    return '<a class="card listing-card" href="stay/' + encodeURIComponent(l.id) + '" target="_blank" rel="noopener">' +
       cardPhotos(l) +
       (l.verified ? '<span class="badge badge-verified">✓ ' + esc(t("card.verified")) + "</span>" : "") +
       '<div class="card-body">' +
