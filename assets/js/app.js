@@ -435,9 +435,131 @@
     if (e.target.classList && e.target.classList.contains("card-track")) updateCardPhotos(e.target.parentNode);
   }, true);
 
+  // Partage d'une annonce : WhatsApp, Facebook, Telegram, e-mail, copier le lien,
+  // et sur téléphone le menu de partage du téléphone (navigator.share).
+  // Le lien est toujours l'adresse lisible /stay/<adresse> : sa page a la photo de l'annonce en aperçu.
+  var ICONS = {
+    share: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12M7.5 7.5 12 3l4.5 4.5M5 12v6.5A2.5 2.5 0 0 0 7.5 21h9a2.5 2.5 0 0 0 2.5-2.5V12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+    whatsapp: '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2.2A9.7 9.7 0 0 0 3.6 16.8L2.3 21.7l5-1.3A9.7 9.7 0 1 0 12 2.2Zm0 17.7c-1.5 0-3-.4-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8 8 0 1 1 12 19.9Zm4.4-6c-.2-.1-1.4-.7-1.7-.8-.2-.1-.4-.1-.5.1l-.8 1c-.1.2-.3.2-.5.1a6.6 6.6 0 0 1-3.3-2.9c-.2-.4.2-.4.7-1.3.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.5-.4h-.5a.9.9 0 0 0-.7.3c-.2.3-.9.9-.9 2.2s.9 2.5 1 2.7c.1.2 1.8 2.8 4.4 3.9 1.6.7 2.3.8 3.1.6.5-.1 1.4-.6 1.6-1.1.2-.6.2-1 .1-1.1l-.5-.3Z"/></svg>',
+    facebook: '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M13.5 21.5v-8h2.7l.4-3.2h-3.1v-2c0-.9.3-1.5 1.6-1.5h1.7V3.9c-.3 0-1.3-.1-2.5-.1-2.4 0-4.1 1.5-4.1 4.2v2.3H7.5v3.2h2.7v8h3.3Z"/></svg>',
+    telegram: '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M21.4 4.3 2.9 11.5c-1.3.5-1.2 1.2-.2 1.5l4.7 1.5 1.8 5.6c.2.6.4.8.9.8.4 0 .6-.2.9-.4l2.3-2.2 4.7 3.5c.9.5 1.5.2 1.7-.8l3.1-14.5c.3-1.3-.5-1.9-1.4-1.5ZM9 14.2l8.6-5.4c.4-.3.8-.1.5.2l-7.1 6.4-.3 3.1L9 14.2Z"/></svg>',
+    email: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5.5h16A1.5 1.5 0 0 1 21.5 7v10a1.5 1.5 0 0 1-1.5 1.5H4A1.5 1.5 0 0 1 2.5 17V7A1.5 1.5 0 0 1 4 5.5Zm-1 1 9 7 9-7" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>',
+    link: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 14a4.5 4.5 0 0 0 6.4 0l3.2-3.2a4.5 4.5 0 0 0-6.4-6.4L11.7 6M14 10a4.5 4.5 0 0 0-6.4 0l-3.2 3.2a4.5 4.5 0 0 0 6.4 6.4l1.5-1.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>',
+    more: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="2" fill="currentColor"/><circle cx="12" cy="12" r="2" fill="currentColor"/><circle cx="19" cy="12" r="2" fill="currentColor"/></svg>'
+  };
+  function canNativeShare() { return typeof navigator.share === "function"; }
+  function shareInfo(l) {
+    var title = listingText(l.title);
+    return { title: title, url: "https://yalladahab.com/" + stayPath(l), text: t("share.text", { title: title }) };
+  }
+  // Rangée de boutons ronds (fiche logement et fenêtre de partage).
+  function shareButtons(l) {
+    var s = shareInfo(l);
+    function link(kind, href, label) {
+      return '<a class="share-btn share-' + kind + '" href="' + esc(href) + '" target="_blank" rel="noopener" data-share="' + kind + '">' +
+        '<span class="share-icon">' + ICONS[kind] + "</span><span>" + esc(label) + "</span></a>";
+    }
+    function button(kind, label) {
+      return '<button type="button" class="share-btn share-' + kind + '" data-share="' + kind + '" data-share-id="' + esc(l.id) + '">' +
+        '<span class="share-icon">' + ICONS[kind] + "</span><span>" + esc(label) + "</span></button>";
+    }
+    return '<div class="share-buttons">' +
+      link("whatsapp", waLink("", s.text + "\n" + s.url), "WhatsApp") +
+      link("facebook", "https://www.facebook.com/sharer/sharer.php?u=" + encodeURIComponent(s.url), "Facebook") +
+      link("telegram", "https://t.me/share/url?url=" + encodeURIComponent(s.url) + "&text=" + encodeURIComponent(s.text), t("share.telegram")) +
+      link("email", "mailto:?subject=" + encodeURIComponent(s.title + " · Yalla Dahab") + "&body=" + encodeURIComponent(s.text + "\n" + s.url), t("share.email")) +
+      button("link", t("share.copy")) +
+      (canNativeShare() ? button("more", t("share.more")) : "") +
+      "</div>";
+  }
+  function showToast(text) {
+    var el = document.getElementById("yd-toast");
+    if (!el) {
+      el = document.createElement("div");
+      el.id = "yd-toast"; el.className = "toast"; el.setAttribute("role", "status");
+      document.body.appendChild(el);
+    }
+    el.textContent = text;
+    el.classList.add("on");
+    clearTimeout(el._timer);
+    el._timer = setTimeout(function () { el.classList.remove("on"); }, 2200);
+  }
+  function copyText(text) {
+    function fallback() {
+      var ta = document.createElement("textarea");
+      ta.value = text; ta.setAttribute("readonly", ""); ta.style.position = "fixed"; ta.style.opacity = "0";
+      document.body.appendChild(ta); ta.select();
+      var ok = false;
+      try { ok = document.execCommand("copy"); } catch (e) {}
+      ta.remove();
+      return ok ? Promise.resolve() : Promise.reject();
+    }
+    return navigator.clipboard && window.isSecureContext ? navigator.clipboard.writeText(text).catch(fallback) : fallback();
+  }
+  function copyLink(l) {
+    var url = shareInfo(l).url;
+    copyText(url).then(function () { showToast(t("listing.copied")); }, function () { window.prompt("", url); });
+  }
+  function nativeShare(l) {
+    var s = shareInfo(l);
+    return navigator.share({ title: s.title + " · Yalla Dahab", text: s.text, url: s.url });
+  }
+  // Fenêtre de partage (ordinateur, ou bouton « Partager » d'une carte sans menu du téléphone).
+  function openShareSheet(l, opener) {
+    closeShareSheet();
+    var box = document.createElement("div");
+    box.className = "share-sheet";
+    box.innerHTML = '<div class="share-panel" role="dialog" aria-modal="true" aria-labelledby="share-sheet-title">' +
+      '<button type="button" class="share-close" aria-label="' + esc(t("lightbox.close")) + '">×</button>' +
+      '<h2 id="share-sheet-title">' + esc(t("share.title")) + "</h2>" +
+      '<p class="muted">' + bidi(listingText(l.title)) + "</p>" +
+      shareButtons(l) + "</div>";
+    box._opener = opener;
+    document.body.appendChild(box);
+    document.body.classList.add("sheet-open");
+    box.addEventListener("click", function (e) {
+      if (e.target === box || e.target.closest(".share-close")) closeShareSheet();
+    });
+    requestAnimationFrame(function () { box.classList.add("on"); box.querySelector(".share-btn").focus(); });
+  }
+  function closeShareSheet() {
+    var box = document.querySelector(".share-sheet");
+    if (!box) return;
+    box.remove();
+    document.body.classList.remove("sheet-open");
+    if (box._opener && box._opener.focus) box._opener.focus();
+  }
+  document.addEventListener("keydown", function (e) { if (e.key === "Escape") closeShareSheet(); });
+  function listingById(id) { return LISTINGS.filter(function (x) { return x.id === id; })[0]; }
+  // « Partager » (carte ou haut de la fiche) : menu du téléphone s'il existe, sinon la fenêtre.
+  function startShare(l, opener) {
+    if (canNativeShare()) nativeShare(l).catch(function (err) { if (err && err.name !== "AbortError") openShareSheet(l, opener); });
+    else openShareSheet(l, opener);
+  }
+  // Les boutons de partage des cartes sont dans le lien de la carte : on empêche d'ouvrir l'annonce.
+  document.addEventListener("click", function (e) {
+    var btn = e.target.closest && e.target.closest("[data-share-id]");
+    if (!btn) return;
+    var l = listingById(btn.dataset.shareId);
+    if (!l) return;
+    e.preventDefault(); e.stopPropagation();
+    var kind = btn.dataset.share;
+    if (kind === "link") copyLink(l);
+    else if (kind === "more") nativeShare(l).catch(function () {});
+    else startShare(l, btn);
+  }, true);
+  // Après un clic sur WhatsApp, Facebook… la fenêtre se ferme.
+  document.addEventListener("click", function (e) {
+    if (e.target.closest && e.target.closest(".share-sheet a.share-btn")) setTimeout(closeShareSheet, 0);
+  });
+  function shareIconButton(l, extraClass) {
+    return '<button type="button" class="share-fab ' + (extraClass || "") + '" data-share="open" data-share-id="' + esc(l.id) + '" aria-label="' + esc(t("share.cardLabel", { title: listingText(l.title) })) + '" title="' + esc(t("share.button")) + '">' + ICONS.share + "</button>";
+  }
+
   function listingCard(l) {
     return '<a class="card listing-card" href="' + stayPath(l) + '" target="_blank" rel="noopener">' +
       cardPhotos(l) +
+      shareIconButton(l) +
       (l.verified ? '<span class="badge badge-verified">✓ ' + esc(t("card.verified")) + "</span>" : "") +
       '<div class="card-body">' +
         '<p class="card-meta">' + esc(t("area." + l.area)) + " · " + l.guests + " " + esc(t("card.guests")) + bedsText(l) +
@@ -588,8 +710,6 @@
     var title = listingText(l.title);
     viewedListing = l.id;
     document.title = title + " · Yalla Dahab";
-    // Lien partagé : la page stay/<id> a sa photo et son titre en aperçu sur WhatsApp et Facebook.
-    var pageUrl = "https://yalladahab.com/" + stayPath(l);
     // L'adresse affichée devient l'adresse lisible de la page de partage (aussi quand on arrive par un ancien
     // lien /stay/<id>) : copier-coller le lien donne la photo en aperçu.
     if (window.history.replaceState && window.location.pathname !== "/" + stayPath(l)) {
@@ -602,7 +722,10 @@
     }
 
     root.innerHTML =
-      '<a class="back" href="' + esc(searchUrl()) + '"><span class="arrow">←</span> ' + esc(t("listing.back")) + "</a>" +
+      '<div class="listing-top">' +
+        '<a class="back" href="' + esc(searchUrl()) + '"><span class="arrow">←</span> ' + esc(t("listing.back")) + "</a>" +
+        '<button type="button" class="btn btn-ghost share-top" data-share="open" data-share-id="' + esc(l.id) + '">' + ICONS.share + " " + esc(t("share.button")) + "</button>" +
+      "</div>" +
       '<div class="gallery">' + zoomable(photo(l.hue, t("type." + l.type), photoOf(l, 0)), 0) + zoomable(photo(l.hue + 25, "", photoOf(l, 1)), 1) + zoomable(photo(l.hue - 25, "", photoOf(l, 2)), 2) +
         (photos.length > 1 ? '<button type="button" class="gallery-all" data-photo="0"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z" fill="currentColor"/></svg> ' + esc(t("listing.allPhotos", { n: photos.length })) + "</button>" : "") +
       "</div>" +
@@ -635,9 +758,7 @@
           '<p class="small muted">' + esc(t("listing.contactNote")) + "</p>" +
           '<div class="share">' +
             "<strong>" + esc(t("listing.share")) + "</strong>" +
-            '<a href="' + waLink("", title + " · Yalla Dahab " + pageUrl) + '" target="_blank" rel="noopener">' + esc(t("listing.shareWhatsapp")) + "</a>" +
-            '<a href="https://www.facebook.com/sharer/sharer.php?u=' + encodeURIComponent(pageUrl) + '" target="_blank" rel="noopener">' + esc(t("listing.shareFacebook")) + "</a>" +
-            '<button type="button" class="link-button" id="copy-link">' + esc(t("listing.copyLink")) + "</button>" +
+            shareButtons(l) +
           "</div>" +
         "</aside>" +
       "</div>";
@@ -670,13 +791,6 @@
     }
 
     refreshStrips(root);
-
-    document.getElementById("copy-link").addEventListener("click", function (e) {
-      var btn = e.target;
-      var done = function () { btn.textContent = t("listing.copied"); };
-      if (navigator.clipboard) navigator.clipboard.writeText(pageUrl).then(done, function () { window.prompt("", pageUrl); });
-      else window.prompt("", pageUrl);
-    });
   }
 
   // Carrousel de petites photos : une rangée qui défile (doigt, molette, flèches),

@@ -493,8 +493,67 @@ body.lb-open { overflow: hidden; }
 .contact-box .price strong { font-size: 1.5rem; }
 .date-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px; }
 .date-row label { min-width: 0; }
-.share { display: flex; flex-wrap: wrap; gap: 6px 14px; border-top: 1px solid var(--line); padding-top: 14px; font-size: .9rem; }
-.share strong { width: 100%; }
+.share { border-top: 1px solid var(--line); padding-top: 14px; display: grid; gap: 10px; }
+.share strong { font-size: .95rem; }
+
+/* Boutons de partage (fiche logement, fenêtre de partage, cartes) */
+.share-buttons { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 6px; }
+.share-btn {
+  display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 0; min-width: 0;
+  background: none; border: 0; color: var(--ink); font: inherit; font-size: .72rem; font-weight: 600;
+  text-align: center; text-decoration: none; cursor: pointer; line-height: 1.2; letter-spacing: -.01em;
+}
+.share-btn > span:last-child { overflow-wrap: normal; word-break: normal; }
+.share-icon {
+  display: inline-grid; place-items: center; width: 46px; height: 46px; border-radius: 50%;
+  background: var(--surface-2); color: var(--ink); transition: transform .2s var(--ease), filter .2s;
+}
+.share-icon svg { width: 22px; height: 22px; }
+.share-btn:hover .share-icon, .share-btn:focus-visible .share-icon { transform: translateY(-2px); filter: brightness(1.06); }
+.share-btn:hover { color: var(--ink); }
+.share-whatsapp .share-icon { background: var(--whatsapp); color: #fff; }
+.share-facebook .share-icon { background: #1877f2; color: #fff; }
+.share-telegram .share-icon { background: #229ed9; color: #fff; }
+.share-email .share-icon, .share-link .share-icon { background: var(--primary-soft); color: var(--primary); }
+.share-more .share-icon { background: var(--surface-2); color: var(--ink); }
+.listing-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.listing-top .back { margin: 22px 0 14px; }
+.share-top { gap: 8px; }
+.share-top svg { width: 18px; height: 18px; }
+.share-fab {
+  position: absolute; top: 10px; inset-inline-end: 10px; z-index: 3; width: 38px; height: 38px; padding: 0;
+  display: inline-grid; place-items: center; border: 0; border-radius: 50%; cursor: pointer;
+  color: #1e2a22; background: rgba(255, 255, 255, .92); box-shadow: 0 2px 8px rgba(0, 0, 0, .18);
+  transition: transform .2s var(--ease);
+}
+.share-fab svg { width: 19px; height: 19px; }
+.share-fab:hover { transform: scale(1.08); }
+.share-sheet {
+  position: fixed; inset: 0; z-index: 1000; display: grid; place-items: center; padding: 16px;
+  background: rgba(10, 16, 12, .55); opacity: 0; transition: opacity .2s;
+}
+.share-sheet.on { opacity: 1; }
+.share-panel {
+  position: relative; width: min(440px, 100%); background: var(--surface); color: var(--ink);
+  border-radius: 22px; padding: 24px 22px 22px; box-shadow: 0 20px 60px rgba(0, 0, 0, .3);
+}
+.share-panel h2 { margin: 0 0 4px; font-size: 1.2rem; padding-inline-end: 36px; }
+.share-panel p { margin: 0 0 18px; }
+.share-close {
+  position: absolute; top: 14px; inset-inline-end: 14px; width: 36px; height: 36px; border: 0; border-radius: 50%;
+  background: var(--surface-2); color: var(--ink); font-size: 1.4rem; line-height: 1; cursor: pointer;
+}
+@media (max-width: 560px) {
+  .share-sheet { place-items: end stretch; padding: 0; }
+  .share-panel { width: 100%; border-radius: 22px 22px 0 0; padding-bottom: calc(22px + env(safe-area-inset-bottom)); }
+}
+body.sheet-open { overflow: hidden; }
+.toast {
+  position: fixed; left: 50%; bottom: 24px; z-index: 1100; transform: translate(-50%, 20px);
+  background: var(--ink); color: var(--bg); padding: 10px 18px; border-radius: 999px; font-weight: 600; font-size: .92rem;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, .2); opacity: 0; pointer-events: none; transition: opacity .2s, transform .2s var(--ease);
+}
+.toast.on { opacity: 1; transform: translate(-50%, 0); }
 
 /* Agenda */
 .tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 22px; }
