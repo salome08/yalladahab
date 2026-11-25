@@ -33,7 +33,7 @@ jobs:
           CHROME_PATH: /usr/bin/google-chrome
       - name: Enregistrer les changements
         run: |
-          git add -A stay
+          git add -A stay sitemap.xml
           if git diff --cached --quiet; then echo "Rien de nouveau"; exit 0; fi
           git config user.name "yalla-dahab-bot"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
