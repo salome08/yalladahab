@@ -757,3 +757,9 @@ body.db-on .demo-note { display: none; }
 .location-box label.check:has(input:disabled) { opacity: .6; cursor: default; }
 .map-pin.map-pin-point { width: 30px; height: 30px; border-width: 2px; background: var(--accent); color: var(--on-accent); }
 .map-pin.map-pin-point.is-selected { background: var(--primary); color: var(--on-primary); }
+
+/* Quartiers de Dahab sur l'accueil (aide Google à comprendre le site) */
+.seo-areas p { color: var(--muted); max-width: 72ch; margin: 0 0 16px; }
+.area-links { display: flex; flex-wrap: wrap; gap: 8px; }
+.area-links a { padding: 7px 14px; border: 1px solid var(--line); border-radius: 999px; background: var(--surface); color: var(--ink); font-weight: 600; font-size: .9rem; text-decoration: none; }
+.area-links a:hover { border-color: var(--primary); color: var(--primary); }
