@@ -102,9 +102,51 @@ function page(template, l, shareImage, slug) {
     .replace(/<meta charset="utf-8">(?!\s*<base)/, '<meta charset="utf-8">\n  <base href="/">')
     // On retire les balises génériques de listing.html pour mettre celles de l'annonce.
     .replace(/\s*<title>[^<]*<\/title>/, "")
-    .replace(/\s*<meta (name="description"|property="og:[^"]+"|name="twitter:[^"]+")[^>]*>/g, "")
+    .replace(/\s*<meta (name="description"|name="robots"|property="og:[^"]+"|name="twitter:[^"]+")[^>]*>/g, "")
     .replace('<meta name="viewport" content="width=device-width, initial-scale=1">', `<meta name="viewport" content="width=device-width, initial-scale=1">\n  ${meta}`)
-    .replace('<body data-page="listing">', `<body data-page="listing" data-listing-id="${esc(l.id)}">`);
+    .replace('<body data-page="listing">', `<body data-page="listing" data-listing-id="${esc(l.id)}">`)
+    // Le texte de l'annonce directement dans la page, pour Google (la fiche complète le remplace dès qu'elle s'affiche).
+    .replace('<div class="container" id="listing"></div>', `<div class="container" id="listing">${staticBody(l, title)}</div>`)
+    .replace("</head>", `  <script type="application/ld+json">${jsonLd(l, title, url, photo)}</script>\n</head>`);
+}
+
+// Contenu lisible sans JavaScript : titre, lieu, prix, photos, description, lien vers tous les logements.
+function staticBody(l, title) {
+  const photos = (l.photos || []).slice(0, 3).map((p, i) =>
+    `<img src="${esc(p)}" alt="${esc(text(l.title))}${i ? ` (photo ${i + 1})` : ""}" loading="lazy" style="width:100%;max-width:640px;border-radius:14px;display:block;margin:0 0 12px">`).join("");
+  const desc = text(l.description).trim().split(/\n\s*\n/).map((p) => `<p>${esc(p).replace(/\n/g, "<br>")}</p>`).join("");
+  return `<article class="stay-static" style="padding:24px 0">` +
+    `<h1>${esc(text(l.title))}</h1>` +
+    `<p><strong>${esc(areaLabel(l))}</strong> · ${esc(summary(l))}</p>` +
+    photos + desc +
+    `<p>Contact the host directly on WhatsApp, no booking fees.</p>` +
+    `<p><a href="/listings.html">See all stays in Dahab</a> · <a href="/">Yalla Dahab</a></p>` +
+    `</article>`;
+}
+
+// Fil d'Ariane pour Google : Yalla Dahab › Stays in Dahab › l'annonce.
+function jsonLd(l, title, url, photo) {
+  const data = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Yalla Dahab", item: `${SITE}/` },
+      { "@type": "ListItem", position: 2, name: "Stays in Dahab", item: `${SITE}/listings.html` },
+      { "@type": "ListItem", position: 3, name: text(l.title), item: url },
+    ],
+  };
+  return JSON.stringify(data).replace(/</g, "\\u003c");
+}
+
+// Plan du site pour Google (sitemap.xml) : les pages publiques + une adresse par annonce en ligne.
+function writeSitemap(listings, slugOf) {
+  const day = (d) => (d ? String(d).slice(0, 10) : "");
+  const pages = ["", "listings.html", "events.html", "host.html", "advertise.html"].map((p) => ({ loc: `${SITE}/${p}` }));
+  for (const l of listings) pages.push({ loc: `${SITE}/${OUT}/${slugOf[l.id]}`, lastmod: day(l.updated_at || l.created_at) });
+  const xml = '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' +
+    pages.map((p) => `  <url><loc>${esc(p.loc)}</loc>${p.lastmod ? `<lastmod>${p.lastmod}</lastmod>` : ""}</url>`).join("\n") +
+    "\n</urlset>\n";
+  fs.writeFileSync("sitemap.xml", xml);
 }
 
 const listings = (await loadListings()).filter((l) => safeId(l.id));
@@ -157,4 +199,5 @@ for (const f of fs.readdirSync(OUT)) if (f.endsWith(".html") && !keep.has(f)) fs
 // Les anciennes images d'aperçu (photos ou prix changés, annonce retirée) sont supprimées.
 const keepImg = new Set([...imageOf.values()].map((f) => f.slice(IMG.length + 1)));
 for (const f of fs.readdirSync(IMG)) if (!keepImg.has(f)) fs.unlinkSync(`${IMG}/${f}`);
+writeSitemap(listings.filter((l) => safeId(slugOf[l.id] || "")), slugOf);
 console.log(`${listings.length} annonce(s), ${keep.size} page(s) de partage dans ${OUT}/, ${keepImg.size} image(s) d'aperçu dans ${IMG}/`);

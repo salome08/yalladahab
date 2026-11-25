@@ -3,8 +3,9 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Yalla Dahab · Stays and local life in Dahab</title>
-  <meta name="description" content="Homes listed by Dahab locals, contact hosts on WhatsApp, no booking fees. Plus what's on in Dahab this week.">
+  <link rel="canonical" href="https://yalladahab.com/">
+  <title>Yalla Dahab · Dahab stays: apartments, studios &amp; villas to rent</title>
+  <meta name="description" content="Find a place to stay in Dahab, Egypt: apartments, studios, rooms and villas by night, week or month, listed by local hosts. Contact them on WhatsApp, no booking fees.">
   <meta property="og:title" content="Yalla Dahab · Stays and local life in Dahab">
   <meta property="og:description" content="Homes listed by Dahab locals, contact hosts on WhatsApp, no booking fees. Plus what's on in Dahab this week.">
   <meta property="og:type" content="website">
@@ -18,6 +19,8 @@
   <meta property="og:image:alt" content="Yalla Dahab: stay with Dahab locals">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:image" content="https://yalladahab.com/assets/img/share-sauge.jpg">
+  <link rel="icon" type="image/png" sizes="192x192" href="/assets/img/icon-192.png">
+  <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'><rect width='40' height='40' rx='12' fill='%235e7d62'/><circle cx='26' cy='15' r='6' fill='%23ff8a66'/><path d='M6 25q4.5-4 9 0t9 0 10 0' fill='none' stroke='%23fff' stroke-width='2.6' stroke-linecap='round'/><path d='M6 31q4.5-4 9 0t9 0 10 0' fill='none' stroke='%23c3d9bd' stroke-width='2.6' stroke-linecap='round'/></svg>">
   <meta name="theme-color" content="#f6f5ef" media="(prefers-color-scheme: light)">
   <meta name="theme-color" content="#101512" media="(prefers-color-scheme: dark)">
@@ -26,6 +29,7 @@
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
   <link rel="stylesheet" href="assets/css/style.css?v=20261124a">
   <script>try{var t=localStorage.getItem("yd-theme");if(t==="dark"||t==="light")document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+  <script type="application/ld+json">{"@context": "https://schema.org", "@graph": [{"@type": "WebSite", "@id": "https://yalladahab.com/#website", "name": "Yalla Dahab", "alternateName": ["YallaDahab", "Yalla Dahab stays"], "url": "https://yalladahab.com/", "inLanguage": ["en", "fr", "ar"], "publisher": {"@id": "https://yalladahab.com/#org"}}, {"@type": "Organization", "@id": "https://yalladahab.com/#org", "name": "Yalla Dahab", "url": "https://yalladahab.com/", "logo": "https://yalladahab.com/assets/img/logo.png", "sameAs": ["https://www.instagram.com/yalladahab.stays/"], "areaServed": {"@type": "Place", "name": "Dahab, South Sinai, Egypt"}}]}</script>
 </head>
 <body data-page="home">
 <header id="site-header"></header>
@@ -33,16 +37,16 @@
 
 <section class="hero">
   <div class="container">
-    <h1 data-i18n="hero.title"></h1>
-    <p data-i18n="hero.subtitle"></p>
+    <h1 data-i18n="hero.title">Stay with Dahab locals</h1>
+    <p data-i18n="hero.subtitle">Homes listed by hosts who live here. Contact them directly on WhatsApp, no booking fees.</p>
     <form class="search-box" id="hero-search" action="listings.html">
-      <label><span data-i18n="search.area"></span><select name="area"></select></label>
-      <label><span data-i18n="search.type"></span><select name="type"></select></label>
-      <label><span data-i18n="search.stay"></span>
-        <select name="stay"><option value="" data-i18n="search.nightly"></option><option value="weekly" data-i18n="search.weekly"></option><option value="monthly" data-i18n="search.monthly"></option></select>
+      <label><span data-i18n="search.area">Area</span><select name="area"></select></label>
+      <label><span data-i18n="search.type">Type</span><select name="type"></select></label>
+      <label><span data-i18n="search.stay">Stay</span>
+        <select name="stay"><option value="" data-i18n="search.nightly">A few nights</option><option value="weekly" data-i18n="search.weekly">A week or more</option><option value="monthly" data-i18n="search.monthly">A month or more</option></select>
       </label>
-      <label><span data-i18n="search.maxPrice"></span><input name="max" type="number" min="0" step="100" inputmode="numeric"></label>
-      <button class="btn btn-coral" type="submit" data-i18n="search.submit"></button>
+      <label><span data-i18n="search.maxPrice">Max budget (EGP)</span><input name="max" type="number" min="0" step="100" inputmode="numeric"></label>
+      <button class="btn btn-coral" type="submit" data-i18n="search.submit">Search</button>
     </form>
     <nav class="quick-filters" id="quick-filters"></nav>
   </div>
@@ -52,24 +56,24 @@
   <div class="banners" data-banner-slot="home"></div>
 
   <section class="section">
-    <div class="section-head"><h2 data-i18n="home.featured"></h2><a href="listings.html" data-i18n="home.seeAll"></a></div>
+    <div class="section-head"><h2 data-i18n="home.featured">Hand-picked stays</h2><a href="listings.html" data-i18n="home.seeAll">See all stays</a></div>
     <div class="grid" id="featured-listings"></div>
   </section>
 
   <section class="why">
-    <div><span class="icon">💸</span><h3 data-i18n="home.why1.title"></h3><p data-i18n="home.why1.text"></p></div>
-    <div><span class="icon">✅</span><h3 data-i18n="home.why2.title"></h3><p data-i18n="home.why2.text"></p></div>
-    <div><span class="icon">💻</span><h3 data-i18n="home.why3.title"></h3><p data-i18n="home.why3.text"></p></div>
+    <div><span class="icon">💸</span><h3 data-i18n="home.why1.title">No booking fees</h3><p data-i18n="home.why1.text">You talk to the host and pay them directly. No 15% platform cut.</p></div>
+    <div><span class="icon">✅</span><h3 data-i18n="home.why2.title">Checked by locals</h3><p data-i18n="home.why2.text">The "verified" badge means we visited the place ourselves.</p></div>
+    <div><span class="icon">💻</span><h3 data-i18n="home.why3.title">Long stays welcome</h3><p data-i18n="home.why3.text">Monthly prices and tested internet speed for divers and remote workers.</p></div>
   </section>
 
   <section class="section">
-    <div class="section-head"><h2 data-i18n="home.events"></h2><a href="events.html" data-i18n="home.seeAgenda"></a></div>
+    <div class="section-head"><h2 data-i18n="home.events">This week in Dahab</h2><a href="events.html" data-i18n="home.seeAgenda">See the full agenda</a></div>
     <div class="events-grid home-events" id="home-events"></div>
   </section>
 
   <section class="host-cta">
-    <div><h2 data-i18n="home.hostCta.title"></h2><p data-i18n="home.hostCta.text"></p></div>
-    <a class="btn btn-coral" href="host.html" data-i18n="home.hostCta.button"></a>
+    <div><h2 data-i18n="home.hostCta.title">You have a place in Dahab?</h2><p data-i18n="home.hostCta.text">List it for free and receive requests from travellers directly on WhatsApp.</p></div>
+    <a class="btn btn-coral" href="host.html" data-i18n="home.hostCta.button">List my place for free</a>
   </section>
 </div>
 </main>

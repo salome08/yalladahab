@@ -3,8 +3,9 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="canonical" href="https://yalladahab.com/listings.html">
   <title>Stays in Dahab · Yalla Dahab</title>
-  <meta name="description" content="Studios, apartments, villas and rooms in Dahab, by night or by month.">
+  <meta name="description" content="All stays in Dahab, Egypt: studios, apartments, villas and rooms for rent by night, week or month, listed by local hosts. Contact them on WhatsApp, no booking fees.">
   <meta property="og:title" content="Stays in Dahab · Yalla Dahab">
   <meta property="og:description" content="Studios, apartments, villas and rooms in Dahab, by night or by month.">
   <meta property="og:type" content="website">
@@ -18,6 +19,8 @@
   <meta property="og:image:alt" content="Yalla Dahab: stay with Dahab locals">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:image" content="https://yalladahab.com/assets/img/share-sauge.jpg">
+  <link rel="icon" type="image/png" sizes="192x192" href="/assets/img/icon-192.png">
+  <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'><rect width='40' height='40' rx='12' fill='%235e7d62'/><circle cx='26' cy='15' r='6' fill='%23ff8a66'/><path d='M6 25q4.5-4 9 0t9 0 10 0' fill='none' stroke='%23fff' stroke-width='2.6' stroke-linecap='round'/><path d='M6 31q4.5-4 9 0t9 0 10 0' fill='none' stroke='%23c3d9bd' stroke-width='2.6' stroke-linecap='round'/></svg>">
   <meta name="theme-color" content="#f6f5ef" media="(prefers-color-scheme: light)">
   <meta name="theme-color" content="#101512" media="(prefers-color-scheme: dark)">
@@ -33,26 +36,26 @@
 <main>
 
 <div class="container">
-  <div class="page-head"><h1 data-i18n="listings.title"></h1></div>
+  <div class="page-head"><h1 data-i18n="listings.title">Stays in Dahab</h1></div>
   <div class="banners" data-banner-slot="search"></div>
   <div class="listings-layout">
     <form class="filters" id="filters">
-      <label><span data-i18n="search.area"></span><select name="area"></select></label>
-      <label><span data-i18n="search.type"></span><select name="type"></select></label>
-      <label><span data-i18n="search.stay"></span>
-        <select name="stay"><option value="" data-i18n="search.nightly"></option><option value="weekly" data-i18n="search.weekly"></option><option value="monthly" data-i18n="search.monthly"></option></select>
+      <label><span data-i18n="search.area">Area</span><select name="area"></select></label>
+      <label><span data-i18n="search.type">Type</span><select name="type"></select></label>
+      <label><span data-i18n="search.stay">Stay</span>
+        <select name="stay"><option value="" data-i18n="search.nightly">A few nights</option><option value="weekly" data-i18n="search.weekly">A week or more</option><option value="monthly" data-i18n="search.monthly">A month or more</option></select>
       </label>
-      <label><span data-i18n="search.maxPrice"></span><input name="max" type="number" min="0" step="100" inputmode="numeric"></label>
-      <fieldset class="feature-filters"><legend data-i18n="search.features"></legend><div class="chips" id="feature-filters"></div></fieldset>
-      <label class="check"><input type="checkbox" name="verified"> <span data-i18n="search.verified"></span></label>
-      <div class="filter-actions"><button class="btn btn-ghost" type="reset" data-i18n="search.reset"></button></div>
+      <label><span data-i18n="search.maxPrice">Max budget (EGP)</span><input name="max" type="number" min="0" step="100" inputmode="numeric"></label>
+      <fieldset class="feature-filters"><legend data-i18n="search.features">Must have</legend><div class="chips" id="feature-filters"></div></fieldset>
+      <label class="check"><input type="checkbox" name="verified"> <span data-i18n="search.verified">Verified only</span></label>
+      <div class="filter-actions"><button class="btn btn-ghost" type="reset" data-i18n="search.reset">Reset</button></div>
     </form>
     <section>
       <div class="results-bar">
         <p class="muted" id="results-count"></p>
         <div class="view-toggle" id="view-toggle" role="group">
-          <button type="button" data-view="list" aria-pressed="true"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" fill="none"/></svg> <span data-i18n="map.list"></span></button>
-          <button type="button" data-view="map" aria-pressed="false"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M12 22s7-6.2 7-12a7 7 0 1 0-14 0c0 5.8 7 12 7 12z" stroke="currentColor" stroke-width="2.2" fill="none"/><circle cx="12" cy="10" r="2.6" fill="currentColor"/></svg> <span data-i18n="map.map"></span></button>
+          <button type="button" data-view="list" aria-pressed="true"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" fill="none"/></svg> <span data-i18n="map.list">List</span></button>
+          <button type="button" data-view="map" aria-pressed="false"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M12 22s7-6.2 7-12a7 7 0 1 0-14 0c0 5.8 7 12 7 12z" stroke="currentColor" stroke-width="2.2" fill="none"/><circle cx="12" cy="10" r="2.6" fill="currentColor"/></svg> <span data-i18n="map.map">Map</span></button>
         </div>
       </div>
       <div class="area-map-wrap" id="area-map-wrap">
