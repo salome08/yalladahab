@@ -795,3 +795,6 @@ body.db-on .demo-note { display: none; }
 .area-links { display: flex; flex-wrap: wrap; gap: 8px; }
 .area-links a { padding: 7px 14px; border: 1px solid var(--line); border-radius: 999px; background: var(--surface); color: var(--ink); font-weight: 600; font-size: .9rem; text-decoration: none; }
 .area-links a:hover { border-color: var(--primary); color: var(--primary); }
+.footer-social { display: flex; gap: 10px; margin-top: 14px; }
+.footer-social a { display: inline-grid; place-items: center; width: 38px; height: 38px; border-radius: 50%; background: rgba(255, 255, 255, .1); color: #fff; }
+.footer-social a:hover { background: rgba(255, 255, 255, .2); color: #c3d9bd; }

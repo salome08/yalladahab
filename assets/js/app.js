@@ -280,6 +280,9 @@
     });
   }
 
+  // Réseaux sociaux de Yalla Dahab (bas de chaque page).
+  var SOCIAL_LINKS = '<div class="footer-social"><a href="https://www.instagram.com/yalladahab.stays/" target="_blank" rel="noopener me" aria-label="Instagram"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="4" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="17.5" cy="6.5" r="1.2" fill="currentColor"/></svg></a><a href="https://www.facebook.com/profile.php?id=61597207221629" target="_blank" rel="noopener me" aria-label="Facebook"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="currentColor" d="M13.5 21v-7.5h2.5l.4-3h-2.9V8.6c0-.9.3-1.5 1.5-1.5h1.5V4.4c-.3 0-1.2-.1-2.2-.1-2.2 0-3.7 1.3-3.7 3.8v2.4H8v3h2.6V21z"/></svg></a></div>';
+
   function renderChrome() {
     var page = document.body.dataset.page;
     var links = [
@@ -323,7 +326,7 @@
     if (footer) {
       footer.innerHTML =
         '<div class="container footer-inner">' +
-          "<div><strong>Yalla Dahab</strong><p>" + esc(t("footer.tagline")) + "</p></div>" +
+          "<div><strong>Yalla Dahab</strong><p>" + esc(t("footer.tagline")) + "</p>" + SOCIAL_LINKS + "</div>" +
           '<nav><a href="listings.html">' + esc(t("nav.listings")) + '</a><a href="events.html">' + esc(t("nav.events")) +
           '</a><a href="host.html">' + esc(t("nav.host")) + '</a><a href="advertise.html">' + esc(t("nav.advertise")) + "</a></nav>" +
           '<p class="demo-note">' + esc(t("footer.demo")) + "</p>" +
