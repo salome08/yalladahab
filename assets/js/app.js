@@ -599,16 +599,74 @@
     form.querySelector('[name="type"]').innerHTML = optionList(TYPES, "type.", t("search.anyType"));
   }
 
+  // ---------- Carrousel « Notre sélection » (page d'accueil) ----------
+  // 12 logements : d'abord ceux marqués « À la une », complétés par d'autres
+  // logements avec photo. L'ordre est mélangé au hasard, mais reste le même
+  // toute la journée (heure du Caire) et change chaque jour.
+  var HOME_PICKS = 12;
+  function cairoDay() {
+    try { return new Intl.DateTimeFormat("en-CA", { timeZone: "Africa/Cairo" }).format(new Date()); }
+    catch (e) { return new Date().toISOString().slice(0, 10); }
+  }
+  function seededRandom(seedText) {
+    var h = 2166136261;
+    for (var i = 0; i < seedText.length; i++) { h ^= seedText.charCodeAt(i); h = Math.imul(h, 16777619); }
+    return function () { // mulberry32
+      h = (h + 0x6D2B79F5) | 0;
+      var r = Math.imul(h ^ (h >>> 15), 1 | h);
+      r = (r + Math.imul(r ^ (r >>> 7), 61 | r)) ^ r;
+      return ((r ^ (r >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+  function dailyShuffle(list, rand) {
+    var a = list.slice().sort(function (x, y) { return String(x.id) < String(y.id) ? -1 : 1; });
+    for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(rand() * (i + 1)); var tmp = a[i]; a[i] = a[j]; a[j] = tmp; }
+    return a;
+  }
+  function homePicks() {
+    var rand = seededRandom("yalladahab-" + cairoDay());
+    var hasPhoto = function (l) { return (l.photos || []).filter(Boolean).length > 0; };
+    var picks = dailyShuffle(LISTINGS.filter(function (l) { return l.featured; }), rand).slice(0, HOME_PICKS);
+    var others = dailyShuffle(LISTINGS.filter(function (l) { return !l.featured && hasPhoto(l); }), rand);
+    picks = picks.concat(others.slice(0, Math.max(0, HOME_PICKS - picks.length)));
+    return dailyShuffle(picks, rand);
+  }
+  // Flèches sur ordinateur, glisser du doigt sur téléphone, sens inversé en arabe.
+  function initHomeCarousel(row) {
+    var box = row.closest(".carousel");
+    if (!box) return;
+    function update() {
+      var pos = Math.abs(row.scrollLeft), max = row.scrollWidth - row.clientWidth;
+      box.dataset.atStart = String(pos <= 2);
+      box.dataset.atEnd = String(pos >= max - 2);
+    }
+    box.querySelectorAll("[data-row-step]").forEach(function (btn) {
+      btn.innerHTML = CHEVRON;
+      btn.addEventListener("click", function () {
+        var card = row.querySelector(".card");
+        var step = card ? card.getBoundingClientRect().width + 20 : row.clientWidth * 0.8;
+        var n = Math.max(1, Math.floor(row.clientWidth / step));
+        var d = Number(btn.dataset.rowStep) * step * n;
+        row.scrollBy({ left: getComputedStyle(row).direction === "rtl" ? -d : d, behavior: "smooth" });
+      });
+    });
+    row.addEventListener("scroll", update, { passive: true });
+    window.addEventListener("resize", update);
+    update();
+  }
+
   function initHome() {
     var form = document.getElementById("hero-search");
     fillSearchSelects(form);
-    var featured = LISTINGS.filter(function (l) { return l.featured; }).slice(0, 3);
+    var featured = homePicks();
     var quick = document.getElementById("quick-filters");
     if (quick) {
       quick.innerHTML = [["beach=1", "filter.beach"], ["seaview=1", "filter.seaview"], ["rooftop=1", "filter.rooftop"], ["garden=1", "filter.garden"], ["stay=monthly", "filter.monthly"], ["pets=1", "filter.pets"]]
         .map(function (q) { return '<a href="listings.html?' + q[0] + '">' + esc(t(q[1])) + "</a>"; }).join("");
     }
-    document.getElementById("featured-listings").innerHTML = featured.map(listingCard).join("");
+    var row = document.getElementById("featured-listings");
+    row.innerHTML = featured.map(listingCard).join("");
+    initHomeCarousel(row);
     document.getElementById("home-events").innerHTML = upcomingEvents().slice(0, 3).map(eventCard).join("");
     renderBanners("home");
   }
