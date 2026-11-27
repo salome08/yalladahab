@@ -27,7 +27,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
-  <link rel="stylesheet" href="assets/css/style.css?v=20261125a">
+  <link rel="stylesheet" href="assets/css/style.css?v=20261127a">
   <script>try{var t=localStorage.getItem("yd-theme");if(t==="dark"||t==="light")document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
   <script type="application/ld+json">{"@context": "https://schema.org", "@graph": [{"@type": "WebSite", "@id": "https://yalladahab.com/#website", "name": "Yalla Dahab", "alternateName": ["YallaDahab", "Yalla Dahab stays"], "url": "https://yalladahab.com/", "inLanguage": ["en", "fr", "ar"], "publisher": {"@id": "https://yalladahab.com/#org"}}, {"@type": "Organization", "@id": "https://yalladahab.com/#org", "name": "Yalla Dahab", "url": "https://yalladahab.com/", "logo": "https://yalladahab.com/assets/img/logo.png", "sameAs": ["https://www.instagram.com/yalladahab.stays/"], "areaServed": {"@type": "Place", "name": "Dahab, South Sinai, Egypt"}}]}</script>
 </head>
@@ -57,7 +57,11 @@
 
   <section class="section">
     <div class="section-head"><h2 data-i18n="home.featured">Hand-picked stays</h2><a href="listings.html" data-i18n="home.seeAll">See all stays</a></div>
-    <div class="grid" id="featured-listings"></div>
+    <div class="carousel" data-at-start="true">
+      <div class="carousel-row" id="featured-listings"></div>
+      <button type="button" class="carousel-nav carousel-prev" data-row-step="-1" aria-label="Previous"></button>
+      <button type="button" class="carousel-nav carousel-next" data-row-step="1" aria-label="Next"></button>
+    </div>
   </section>
 
   <section class="why">
@@ -99,13 +103,13 @@
 </div>
 </main>
 <footer id="site-footer"></footer>
-<script src="assets/js/config.js?v=20261125a"></script>
-<script src="assets/js/i18n.js?v=20261125a"></script>
-<script src="assets/data/listings.js?v=20261125a"></script>
-<script src="assets/data/events.js?v=20261125a"></script>
-<script src="assets/data/ads.js?v=20261125a"></script>
-<script src="assets/js/slug.js?v=20261125a"></script>
-<script src="assets/js/db.js?v=20261125a"></script>
-<script src="assets/js/app.js?v=20261125a"></script>
+<script src="assets/js/config.js?v=20261127a"></script>
+<script src="assets/js/i18n.js?v=20261127a"></script>
+<script src="assets/data/listings.js?v=20261127a"></script>
+<script src="assets/data/events.js?v=20261127a"></script>
+<script src="assets/data/ads.js?v=20261127a"></script>
+<script src="assets/js/slug.js?v=20261127a"></script>
+<script src="assets/js/db.js?v=20261127a"></script>
+<script src="assets/js/app.js?v=20261127a"></script>
 </body>
 </html>
